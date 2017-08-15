@@ -1,5 +1,8 @@
 $( document ).ready(function() {
 	var socket = io();
+	$("#targetTemp").slider({
+		tooltip: 'always'
+	});
 	//$("#toggle").click(function() {
 
 	//});
@@ -51,4 +54,8 @@ $( document ).ready(function() {
 		else
 			$("#currTemp").css('color', 'green');
 	});	
+
+	$("#targetTemp").change(function(){
+		socket.emit('changeTargetTemp', $("#targetTemp").val())
+	});
 });

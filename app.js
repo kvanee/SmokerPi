@@ -1,9 +1,3 @@
-//remote editing
-//https://www.youtube.com/watch?v=RlgLIr2gZFg
-//jmate https://github.com/jrnewell/jmate
-//remote vscode
-//(from windows) plink.exe -R 52698:127.0.0.1:52698 pi@192.168.1.168
-
 var express = require('express');
 var app = express();
 var server = require('http').createServer(app);
@@ -27,7 +21,7 @@ var Controller = require('node-pid-controller');
 //var db = require('better-sqlite3');
 //db.open('./database.sqlite');
 var port = 3080;
-var targetTemp = 230;
+var targetTemp = 0;
 var interval = 10000; 
 var pidC = new Controller({
   k_p: 0.5,
@@ -61,6 +55,10 @@ io.on('connection', function(socket){
   });
   socket.on('disconnect', function(){
     //console.log('user disconnected');
+  });
+  socket.on('changeTargetTemp', function(newTemp){
+	targetTemp = newTemp;
+	console.log('target temp changed:' + newTemp);
   });
 });
 
