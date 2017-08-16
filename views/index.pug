@@ -9,35 +9,22 @@ html(lang="en")
 			meta(name="author",content="")
 			title= title
 			block styles
-				link(rel="stylesheet", href='/css/main.css')
 				link(rel="stylesheet", href='/bootstrap/dist/css/bootstrap.min.css')
 				link(rel="stylesheet", href='/bootstrap-slider/slider.css')
+				link(rel="stylesheet", href='/css/main.css')
 			block headscripts
 				script(src='/jquery/dist/jquery.min.js')
 				script(src='/bootstrap/dist/js/bootstrap.min.js')
-				script(src='/bootstrap-slider/bootstrap-slider.js')
-				script(src='/chart.js/dist/Chart.min.js')
-			
+					
 	body(class='body')
 		block body
 			h1(class='cover-heading')= message
 			br
 			br
-			div(class='row')
-				div(class='col-sm-4')
-				div(class='col-sm-4')
-					h1#currTemp(class='cover-heading')= currTemp
-			div(class=well)
-				input#targetTemp(
-					data-slider-id='targetTemp' 
-					type='text' data-slider-min='180'
-					 data-slider-max='300'
-					 data-slider-step='1'
-					 data-slider-value='250'
-				)
-			canvas#myChart(width=400, height=400)
+			form(method="post")
+				button#start(class="btn btn-lg active btn-warning" type="submit")
+					| Start
 	block scripts
 		script(src="/socket.io/socket.io.js")
-		
-		script(src="/js/main.js")
+		script(src="/js/index.js")
 	

@@ -1,17 +1,24 @@
 html,
 body {
   height: 100%;
-  
-  color: #fff;
+  color: #bbb;
+  background-color: #333;
   text-align: center;
   text-shadow: 0 1px 3px rgba(0,0,0,.5);
 }
-.body {
-  background-color: #333;
-}
-.cover-heading {
-  color: #aaa;
+h2 {
+  font-weight: 200;
+  font-size: 60px;
 }
 canvas {
   background-color: #fff;
+}
+.btn-warning {
+  background-color: #FF9600;
+  border-color: #dc8c1b;
+}
+.btn-warning.active,.btn-warning.active:hover,.btn-warning.active:focus {
+  color: #ddd;
+  background-color: #ffb54c;
+  border-color: #d58512;
 }

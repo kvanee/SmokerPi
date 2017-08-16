@@ -107,20 +107,19 @@ calcTemp = function() {
 	if (temp >= 0) 
 		return temp;
 	
-//	float rpoly = Rt;
+	var rpoly = Rt;
+	temp = -242.02;
+	temp += 2.2228 * rpoly;
+	rpoly *= Rt;  // square
+	temp += 2.5859e-3 * rpoly;
+	rpoly *= Rt;  // ^3
+	temp -= 4.8260e-6 * rpoly;
+	rpoly *= Rt;  // ^4
+	temp -= 2.8183e-8 * rpoly;
+	rpoly *= Rt;  // ^5
+	temp += 1.5243e-10 * rpoly;
 
-//	temp = -242.02;
-//	temp += 2.2228 * rpoly;
-//	rpoly *= Rt;  // square
-//	temp += 2.5859e-3 * rpoly;
-//	rpoly *= Rt;  // ^3
-//	temp -= 4.8260e-6 * rpoly;
-//	rpoly *= Rt;  // ^4
-//	temp -= 2.8183e-8 * rpoly;
-//	rpoly *= Rt;  // ^5
-//	temp += 1.5243e-10 * rpoly;
-
-//	return temp;
+	return temp;
 };
 
 function Max31865(cs) {	

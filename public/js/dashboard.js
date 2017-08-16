@@ -1,12 +1,7 @@
 $( document ).ready(function() {
 	var socket = io();
-	$("#targetTemp").slider({
-		tooltip: 'always'
-	});
-	//$("#toggle").click(function() {
 
-	//});
-	
+	$('input[name=setBlowerState]:checked').parent().addClass('active');
 	var ctx = document.getElementById('myChart').getContext('2d');
 	var myChart = new Chart(ctx, {
 		type: 'line',
@@ -49,13 +44,14 @@ $( document ).ready(function() {
 		myChart.data.datasets[0].data.push(data.currTemp);
     	myChart.update();
   
-		if( data.blowerOn)
+		if(data.isBlowerOn)
 			$("#currTemp").css('color', 'red');
 		else
 			$("#currTemp").css('color', 'green');
 	});	
+	$('input[type=radio][name=setBlowerState]').change(function() {
+        socket.emit('setBlowerState', this.value);
+    });
 
-	$("#targetTemp").change(function(){
-		socket.emit('changeTargetTemp', $("#targetTemp").val())
-	});
+
 });
