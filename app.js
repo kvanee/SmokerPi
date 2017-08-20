@@ -9,7 +9,7 @@ app.use(express.static('public'));
 var io = require('socket.io')(server);
 var port = 3080;
 var bbqMonitor = require('./bbqMonitor');
-var monitor = new bbqMonitor(false);
+var monitor = new bbqMonitor(true);
 
 app.get('/', function (req, res) {
 	res.render('index', {
@@ -56,7 +56,7 @@ app.get('/loadChartData/:sessionId', function(req, res) {
 
 io.on('connection', function(socket){
 	socket.on('setBlowerState', function(blowerState){
-		monitor.blowerState = blowerState;
+		monitor.setBlowerState(blowerState);
 	});
 });
 
