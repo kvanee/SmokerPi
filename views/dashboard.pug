@@ -17,6 +17,14 @@ html(lang="en")
 					
 	body(class='body')
 		block body
+			div(class="btn-group")
+				//button(type="button" class="btn")=message
+				h1= message
+					button(type="button" class="btn btn-lg dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false")
+						span(class="sr-only")
+							| Toggle Dropdown
+					div#sessionDropDown(class="dropdown-menu")
+			br
 			div(class='row')
 				div(class='col justify-content-center')
 					h2#currTemp= currTemp + "°F"
@@ -33,6 +41,8 @@ html(lang="en")
 						| On
 			br
 			canvas#myChart(width=400, height=400)
+
+			input#sessionId(style="display:none", value=sessionId)
 	block scripts
 		script(src="/socket.io/socket.io.js")
 		script(src='/chart.js/dist/Chart.min.js')

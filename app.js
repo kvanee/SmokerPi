@@ -8,21 +8,8 @@ app.use(express.static('bower_components'));
 app.use(express.static('public'));
 var io = require('socket.io')(server);
 var port = 3080;
-
-var stub = function() {
-	return {
-		currTemp: 249,
-		targetTemp: 205,
-		isBlowerOn: true,
-		blowerState: "auto",
-		start: function(){},
-		stop: function(){},
-		getTempLog: function(){},
-		newSession: function(callback) {callback(1);}
-	}
-}();
-//var bbqMonitor = require('bbq-monitor')();
-var bbqMonitor = stub;
+var bbqMonitor = require('./bbqMonitor');
+var monitor = new bbqMonitor(false);
 
 app.get('/', function (req, res) {
 	res.render('index', {
@@ -32,30 +19,44 @@ app.get('/', function (req, res) {
 });
 
 app.post('/', function (req, res) {
-	bbqMonitor.newSession(function(sessionId){
-		res.redirect("dashboard/"+sessionId);
+	monitor.newSession(function(data) {
+		io.emit('updateTemp', data);
+	},
+	function(sessionId){
+		res.redirect("dashboard/" + sessionId);
 	});
 });
 
 app.get('/dashboard/:sessionId', function (req, res) {
-	bbqMonitor.start(req.params.sessionId, function() {
-		io.emit('updateTemp', data);
+	monitor.getSession(req.params.sessionId, function(data) {
+		data = data || {startDate: "invalid sessionId", startTime: ""};
+		res.render('dashboard', {
+			title: 'SmokerPi', 
+			message: data.startDate,
+			currTemp: monitor.currTemp,
+			targetTemp: monitor.targetTemp,
+			isBlowerOn: monitor.isBlowerOn,
+			blowerState: monitor.blowerState,
+			sessionId: req.params.sessionId
+		});
 	});
-	res.render('dashboard', {
-		title: 'SmokerPi', 
-		currTemp: bbqMonitor.currTemp,
-		targetTemp: bbqMonitor.targetTemp,
-		isBlowerOn: bbqMonitor.isBlowerOn,
-		blowerState: bbqMonitor.blowerState
+});
+
+app.get('/loadPastSessions', function(req, res) {
+	monitor.getPastSessions(function(data) {
+		res.json(data);
+	});
+});
+
+app.get('/loadChartData/:sessionId', function(req, res) {
+	monitor.getTemperatureLog(req.params.sessionId, function (data) {
+		res.json(data);
 	});
 });
 
 io.on('connection', function(socket){
-  bbqMonitor.getTempLog(function (err, data) {
-		socket.emit("refreshChart", data)
-	});
-  socket.on('setBlowerState', function(blowerState){
-		bbqMonitor.blowerState = blowerState;
+	socket.on('setBlowerState', function(blowerState){
+		monitor.blowerState = blowerState;
 	});
 });
 

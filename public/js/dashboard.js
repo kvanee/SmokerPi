@@ -25,20 +25,40 @@ $( document ).ready(function() {
                     				unit: 'second'
                 			}
             			}]
-        		}
+				},
+				animation: {
+                    duration: 2000,
+                    onProgress: function(animation) {
+                        progress.value = animation.currentStep / animation.numSteps;
+                    },
+                    onComplete: function(animation) {
+                        window.setTimeout(function() {
+                            progress.value = 0;
+                        }, 2000);
+                    }
+                }
     		}
 	});
-	socket.on('refreshChart', function(data){
+
+	$.getJSON("/loadPastSessions" , function(data) {
+		data.forEach((item) => {
+			$("#sessionDropDown").append('<a class="dropdown-item" href="/dashboard/'+item._id+'">'+item.startDate +'</a>')
+		});
+		$(".dropdown-toggle").dropdown();
+	});
+	
+	$.getJSON("/loadChartData/" + $("#sessionId").val(), function(data) {
 		myChart.data.labels.length = 0;
 		myChart.data.datasets[0].data.length = 0;
 		data.forEach((item) => {
 			myChart.data.labels.push(item.time);
 			myChart.data.datasets[0].data.push(item.currTemp);
 		});
-    	myChart.update();
+		myChart.update();
     });
 	
 	socket.on('updateTemp', function(data){
+		//TODO: dont add data if session is historical.
 		$("#currTemp").text(data.currTemp);
 		myChart.data.labels.push(data.time);
 		myChart.data.datasets[0].data.push(data.currTemp);
@@ -49,6 +69,7 @@ $( document ).ready(function() {
 		else
 			$("#currTemp").css('color', 'green');
 	});	
+
 	$('input[type=radio][name=setBlowerState]').change(function() {
         socket.emit('setBlowerState', this.value);
     });

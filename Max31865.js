@@ -7,7 +7,6 @@
 *  SDI - this is the Serial Data In / Master Out Slave In pin, for data sent from your processor to the MAX31865
 *  CS - this is the Chip Select pin, drop it low to start an SPI transaction. Its an input to the chip
 */
-var rpio = require('rpio');
 var math = require('math');
 var debug = false;
 var refResistor = 430,
@@ -123,6 +122,7 @@ calcTemp = function() {
 };
 
 function Max31865(cs) {	
+	rpio = require('rpio');
 	rpio.spiBegin();
 	rpio.spiChipSelect(cs);
 	rpio.spiSetClockDivider(128);  /* Set SPI speed to 1.95MHz */
