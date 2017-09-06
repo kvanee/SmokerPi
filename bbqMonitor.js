@@ -13,7 +13,7 @@ function bbqMonitor(debug, callback) {
     if(debug) {
 		thermometer = {
 			calcTempF: function(){
-				return 250 + (Math.random() * 10.0);
+				return 245 + (Math.random() * 10.0);
 			}
 		};
 		rpio = {
@@ -30,7 +30,7 @@ function bbqMonitor(debug, callback) {
 	this.isBlowerOn = false;
 	this.blowerState = "off"
 	this.logState = "off"
-	this.currTemp = thermometer.calcTempF();
+	this.currTemp = thermometer.calcTempF().toFixed(1);
 	var now = new Date();
 	this.sessionName = date.format(now, 'YYYY-MM-DD') + "-Meat";
 	this.period = 10000;/*Interval to check temp and adjust blower*/
@@ -60,6 +60,10 @@ bbqMonitor.prototype.setLogState = function(self, logState) {
 
 bbqMonitor.prototype.setSessionName = function(self, sessionName) {
 	self.sessionName = sessionName;
+}
+
+bbqMonitor.prototype.setTargetTemp = function(self, targetTemp) {
+	self.targetTemp = targetTemp;
 }
 
 bbqMonitor.prototype.getPastSessions = function(callback) {
@@ -103,8 +107,8 @@ function monitorTemp(self, callback) {
 	};
 	if(self.logState == "on") {
 		db.sessionLogs.insert(data);
-		callback(data);
 	}
+	callback(data);
 }
 
 bbqMonitor.prototype.monitorTemp = monitorTemp;

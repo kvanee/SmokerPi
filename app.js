@@ -50,6 +50,10 @@ io.on('connection', function(socket){
 		monitor.setSessionName(monitor, SessionName);
 		socket.broadcast.emit('setSessionName', SessionName);
 	});
+	socket.on('setTargetTemp', function(targetTemp){
+		monitor.setTargetTemp(monitor, targetTemp);
+		socket.broadcast.emit('setTargetTemp', targetTemp);
+	});
 });
 
 server.listen(port, function(){

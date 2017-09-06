@@ -26,6 +26,11 @@ html(lang="en")
 						span(class='input-group-addon') Name
 						input#sessionName(value=sessionName, class="form-control text-center", aria-describedby="btnGroupAddon")
 				br
+				div(class="row")
+					div(class='input-group text-center')
+						span(class='input-group-addon') Temp
+						input#targetTemp(value=targetTemp, class="form-control text-center", aria-describedby="btnGroupAddon")
+				br
 				div(class='row')
 					div(class='col justify-content-center')
 						h2#currTemp= currTemp + "°F"

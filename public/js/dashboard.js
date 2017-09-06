@@ -32,9 +32,8 @@ $( document ).ready(function() {
 
 	$.getJSON("/loadPastSessions" , function(data) {
 		data.forEach((item) => {
-			$("#sessionDropDown").append('<a class="dropdown-item" href="/dashboard/'+item._id+'">'+item.startDate +'</a>')
+			//TODO: autocomplete Name.
 		});
-		$(".dropdown-toggle").dropdown();
 	});
 	
 	var loadChartData = function(){
@@ -52,9 +51,11 @@ $( document ).ready(function() {
 	socket.on('updateTemp', function(data){
 		//TODO: dont add data if session is historical.
 		$("#currTemp").text(data.currTemp + "°F");
-		myChart.data.labels.push(data.time);
-		myChart.data.datasets[0].data.push(data.currTemp);
-    	myChart.update();
+		if($('input[name=setLogState]:checked').val() == "on") {
+			myChart.data.labels.push(data.time);
+			myChart.data.datasets[0].data.push(data.currTemp);
+			myChart.update();
+		}
   
 		if(data.isBlowerOn)
 			$("#currTemp").css('color', 'red');
@@ -69,6 +70,12 @@ $( document ).ready(function() {
 	socket.on('setSessionName', function(data){
 		$('#sessionName').val(data);
 		loadChartData();
+	});
+	$('#targetTemp').change(function(){
+		socket.emit('setTargetTemp', this.value);
+	});
+	socket.on('setTargetTemp', function(data){
+		$('#targetTemp').val(data);
 	});
 	$('input[type=radio][name=setBlowerState]').change(function() {
         socket.emit('setBlowerState', this.value);
