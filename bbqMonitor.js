@@ -9,11 +9,11 @@ db = {}
 db.sessions = new Datastore({ filename: './session.db', autoload: true});
 db.sessionLogs = new Datastore({ filename: './logs.db', autoload: true});
 
-function bbqMonitor(debug) {	
+function bbqMonitor(debug, callback) {	
     if(debug) {
 		thermometer = {
 			calcTempF: function(){
-				return 249;
+				return 250 + (Math.random() * 10.0);
 			}
 		};
 		rpio = {
@@ -26,26 +26,24 @@ function bbqMonitor(debug) {
 		thermometer = new Max31865(0/*SPI Device 0*/);
 	}
 	this.blowerPin = 8;/*GPIO pin used to turn the blower on and off*/
-	this.targetTemp = 0;
+	this.targetTemp = 250;
 	this.isBlowerOn = false;
 	this.blowerState = "off"
+	this.logState = "off"
 	this.currTemp = thermometer.calcTempF();
-	this.sessionId = 0;
+	var now = new Date();
+	this.sessionName = date.format(now, 'YYYY-MM-DD') + "-Meat";
 	this.period = 10000;/*Interval to check temp and adjust blower*/
-	this.interval = 0;
-
 	rpio.open(this.blowerPin, rpio.OUTPUT, rpio.LOW);
+	var self = this;
+	this.interval = setInterval(function(){
+		monitorTemp(self, callback);
+	},self.period);
 }
 
-bbqMonitor.prototype.stop = function() {
-    clearInterval(this.interval);
-	this.interval = 0;
-	this.sessionId = 0;
-}
-
-bbqMonitor.prototype.setBlowerState = function(blowerState) {
-	this.blowerState = blowerState;
-	if( this.blowerState == "on") {
+bbqMonitor.prototype.setBlowerState = function(self, blowerState) {
+	self.blowerState = blowerState;
+	if(((self.currTemp < self.targetTemp) && self.blowerState == "auto") || self.blowerState == "on") {
 		rpio.write(this.blowerPin, rpio.HIGH);
 		this.isBlowerOn = true;
 	}
@@ -56,14 +54,12 @@ bbqMonitor.prototype.setBlowerState = function(blowerState) {
 	
 }
 
-bbqMonitor.prototype.getSession = function(sessionId, callback) {
-	var now = new Date();
-	sessionId = sessionId || this.sessionId;
-    db.sessions.findOne({ _id: sessionId}, function (err, data) {
-		if (err)
-			throw err;
-		callback(data);
-    });
+bbqMonitor.prototype.setLogState = function(self, logState) {
+	self.logState = logState;
+}
+
+bbqMonitor.prototype.setSessionName = function(self, sessionName) {
+	self.sessionName = sessionName;
 }
 
 bbqMonitor.prototype.getPastSessions = function(callback) {
@@ -76,10 +72,10 @@ bbqMonitor.prototype.getPastSessions = function(callback) {
     });
 }
 
-bbqMonitor.prototype.getTemperatureLog = function(sessionId, callback) {
+bbqMonitor.prototype.getTemperatureLog = function(sessionName, callback) {
     var now = new Date();
-	db.sessionLogs.find({ sessionId: sessionId})
-	.sort({ time: 1 })
+	db.sessionLogs.find({ sessionName: sessionName})
+	.sort({ date: 1, time: 1 })
 	.exec(function (err, data) {
         callback(data);
     });
@@ -88,7 +84,7 @@ bbqMonitor.prototype.getTemperatureLog = function(sessionId, callback) {
 function monitorTemp(self, callback) {
 	var now = new Date();
 	isBlowerOn = false;
-	self.currTemp = thermometer.calcTempF();
+	self.currTemp = thermometer.calcTempF().toFixed(1);
 	if(((self.currTemp < self.targetTemp) && self.blowerState == "auto") || self.blowerState == "on") {
 		rpio.write(self.blowerPin, rpio.HIGH);
 		self.isBlowerOn = true;
@@ -98,32 +94,17 @@ function monitorTemp(self, callback) {
 		self.isBlowerOn = false;
 	}
 	var data = {
-		sessionId: self.sessionId,
-    	date: date.format(now, 'YYYY/MM/DD'),
+		sessionName: self.sessionName,
+		date: date.format(now, 'YYYY/MM/DD'),
 		time: date.format(now, 'HH:mm:ss'),
 		currTemp: self.currTemp,
 		targetTemp: self.targetTemp,
 		isBlowerOn: self.isBlowerOn
 	};
-	db.sessionLogs.insert(data);
-	callback(data);
-}
-
-bbqMonitor.prototype.newSession = function(update, callback) {
-	if (this.sessionId)
-		callback(this.sessionId);
-	var now = new Date();
-	var self = this;
-	db.sessions.insert({
-		startDate: date.format(now, 'YYYY/MM/DD'),
-		startTime: date.format(now, 'HH:mm:ss')
-	}, function (err, doc) { 
-		self.sessionId = doc._id;
-		self.interval = setInterval(function(){
-			monitorTemp(self, update)
-		}, self.period);
-		callback(doc._id);
-	});
+	if(self.logState == "on") {
+		db.sessionLogs.insert(data);
+		callback(data);
+	}
 }
 
 bbqMonitor.prototype.monitorTemp = monitorTemp;

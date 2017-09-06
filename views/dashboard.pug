@@ -17,32 +17,42 @@ html(lang="en")
 					
 	body(class='body')
 		block body
-			div(class="btn-group")
-				//button(type="button" class="btn")=message
-				h1= message
-					button(type="button" class="btn btn-lg dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false")
-						span(class="sr-only")
-							| Toggle Dropdown
-					div#sessionDropDown(class="dropdown-menu")
-			br
-			div(class='row')
-				div(class='col justify-content-center')
-					h2#currTemp= currTemp + "°F"
-			div(class='row')
-				div(class='btn-group' data-toggle="buttons")
-					label(class="btn btn-lg btn-warning")
-						input#BlowerOff(value="off", type='radio', name="setBlowerState", checked=(blowerState=="off"))
-						| Off
-					label(class="btn btn-lg btn-warning")
-						input#BlowerAuto(value="auto", type='radio', name="setBlowerState", checked=(blowerState=="auto"))
-						| Auto
-					label(class="btn btn-lg btn-warning")
-						input#BlowerOn(value="on", type='radio', name="setBlowerState", checked=(blowerState=="on"))
-						| On
-			br
-			canvas#myChart(width=400, height=400)
-
-			input#sessionId(style="display:none", value=sessionId)
+			div(class="container")
+				div(class="row")
+					h1 Welcome to SmokerPi
+				br
+				div(class="row")
+					div(class='input-group text-center')
+						span(class='input-group-addon') Name
+						input#sessionName(value=sessionName, class="form-control text-center", aria-describedby="btnGroupAddon")
+				br
+				div(class='row')
+					div(class='col justify-content-center')
+						h2#currTemp= currTemp + "°F"
+				div(class='row inline-headers')
+					div(class='btn-group' data-toggle="buttons")
+						label(class="btn btn-lg btn-warning disabled" style="pointer-events:none") Blower
+						label(class="btn btn-lg btn-warning")
+							input#BlowerOff(value="off", type='radio', name="setBlowerState", checked=(blowerState=="off"))
+							| Off
+						label(class="btn btn-lg btn-warning")
+							input#BlowerAuto(value="auto", type='radio', name="setBlowerState", checked=(blowerState=="auto"))
+							| Auto
+						label(class="btn btn-lg btn-warning")
+							input#BlowerOn(value="on", type='radio', name="setBlowerState", checked=(blowerState=="on"))
+							| On
+				br
+				div(class='row inline-headers')
+					div(class='btn-group' data-toggle="buttons")
+						label(class="btn btn-lg btn-warning disabled" style="pointer-events:none") Logger
+						label(class="btn btn-lg btn-warning")
+							input#BlowerOff(value="off", type='radio', name="setLogState", checked=(logState=="off"))
+							| Off
+						label(class="btn btn-lg btn-warning")
+							input#BlowerOn(value="on", type='radio', name="setLogState", checked=(logState=="on"))
+							| On
+				br
+				canvas#myChart(width=400, height=400)
 	block scripts
 		script(src="/socket.io/socket.io.js")
 		script(src='/chart.js/dist/Chart.min.js')

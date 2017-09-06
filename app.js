@@ -9,36 +9,19 @@ app.use(express.static('public'));
 var io = require('socket.io')(server);
 var port = 3080;
 var bbqMonitor = require('./bbqMonitor');
-var monitor = new bbqMonitor(true);
+var monitor = new bbqMonitor(false, function(data) {
+	io.emit('updateTemp', data);
+});
 
 app.get('/', function (req, res) {
-	res.render('index', {
+	res.render('dashboard', {
 		title: 'SmokerPi', 
-		message: 'Welcome to SmokerPi.', 
-	});
-});
-
-app.post('/', function (req, res) {
-	monitor.newSession(function(data) {
-		io.emit('updateTemp', data);
-	},
-	function(sessionId){
-		res.redirect("dashboard/" + sessionId);
-	});
-});
-
-app.get('/dashboard/:sessionId', function (req, res) {
-	monitor.getSession(req.params.sessionId, function(data) {
-		data = data || {startDate: "invalid sessionId", startTime: ""};
-		res.render('dashboard', {
-			title: 'SmokerPi', 
-			message: data.startDate,
-			currTemp: monitor.currTemp,
-			targetTemp: monitor.targetTemp,
-			isBlowerOn: monitor.isBlowerOn,
-			blowerState: monitor.blowerState,
-			sessionId: req.params.sessionId
-		});
+		currTemp: monitor.currTemp,
+		targetTemp: monitor.targetTemp,
+		isBlowerOn: monitor.isBlowerOn,
+		blowerState: monitor.blowerState,
+		logState: monitor.logState,
+		sessionName: monitor.sessionName
 	});
 });
 
@@ -48,15 +31,24 @@ app.get('/loadPastSessions', function(req, res) {
 	});
 });
 
-app.get('/loadChartData/:sessionId', function(req, res) {
-	monitor.getTemperatureLog(req.params.sessionId, function (data) {
+app.get('/loadChartData/:sessionName', function(req, res) {
+	monitor.getTemperatureLog(req.params.sessionName, function (data) {
 		res.json(data);
 	});
 });
 
 io.on('connection', function(socket){
 	socket.on('setBlowerState', function(blowerState){
-		monitor.setBlowerState(blowerState);
+		monitor.setBlowerState(monitor, blowerState);
+		socket.broadcast.emit('setBlowerState', blowerState);
+	});
+	socket.on('setLogState', function(logState){
+		monitor.setLogState(monitor, logState);
+		socket.broadcast.emit('setLogState', logState);
+	});
+	socket.on('setSessionName', function(SessionName){
+		monitor.setSessionName(monitor, SessionName);
+		socket.broadcast.emit('setSessionName', SessionName);
 	});
 });
 

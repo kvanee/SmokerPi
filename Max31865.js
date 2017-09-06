@@ -135,7 +135,7 @@ function Max31865(cs) {
 Max31865.prototype.calcTemp = calcTemp;
 
 Max31865.prototype.calcTempF = function() {
-	return (((calcTemp() * 9) / 5) + 32).toFixed(1);
+	return (((calcTemp() * 9) / 5) + 32);
 };
 
 var MAX31865_FAULT_HIGHTHRESH = 0x80,

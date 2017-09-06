@@ -22,3 +22,9 @@ canvas {
   background-color: #ffb54c;
   border-color: #d58512;
 }
+
+.inline-headers h4{
+  display: inline-block;
+  vertical-align: baseline;
+  margin-right: 20px;
+}

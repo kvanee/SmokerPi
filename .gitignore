@@ -3,3 +3,5 @@ bower_components/.DS_Store
 .vscode/launch.json
 bower_components/*
 node_modules/*
+.DS_Store
+*.db
