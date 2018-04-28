@@ -30,21 +30,22 @@ function _oneShot() {
 	rpio.msleep(65)
 }
 
-function _enableBias(b) {	
+function _enableBias(cs, b) {	
 	//enable bias		
-	var config = _read8(CONFIG_REG);
+	var config = _read8(cs, CONFIG_REG);
 	if(b)
 		config |= CONFIG_BIAS;
 	else
 		config &= ~CONFIG_BIAS;
 		
-	_write(CONFIG_REG, config);
+	_write(cs, CONFIG_REG, config);
 	rpio.msleep(10)
 }
 
-function _write(address, value) {
+function _write(cs, address, value) {
 	if (rpio === undefined)
 		return;
+	rpio.spiChipSelect(cs);
 	address |= 0x80 //Set Write Bit
 	
 	var tx = new Buffer([address, value]);
@@ -52,9 +53,10 @@ function _write(address, value) {
 	rpio.spiTransfer(tx, rx, tx.length); 
 }
 
-function _read8(address) {
+function _read8(cs, address) {
 	if (rpio === undefined)
 		return;
+	rpio.spiChipSelect(cs);
 	address &= 0x7F; //Ensure write bit is not set
 	var tx = new Buffer([address, 0xFF]);
 	var rx = new Buffer(tx.length)
@@ -62,7 +64,10 @@ function _read8(address) {
 	return rx[1]
 }
 
-function _read16(address) {
+function _read16(cs, address) {
+	if (rpio === undefined)
+		return;
+	rpio.spiChipSelect(cs);
 	var tx = new Buffer([address, 0xFF, 0xFF]);
 	var rx = new Buffer(tx.length)
 	rpio.spiTransfer(tx, rx, tx.length);
@@ -77,16 +82,16 @@ var config = _read8(CONFIG_REG);
   _write(CONFIG_REG, config);
 }
 
-calcTemp = function() {	
-	_enableBias(true);
+calcTemp = function(cs) {	
+	_enableBias(cs, true);
 	_oneShot();
 	
-	var rtd = _read16(RTDMSB_REG);
+	var rtd = _read16(cs, RTDMSB_REG);
 	rtd >>=1; //remove fault bit
 	if(debug)
 		console.log("rtd: " + rtd);
 	
-	_enableBias(false);	
+	_enableBias(cs, false);	
 	
 	var ratio = rtd / 32768;
 	if(debug)
@@ -121,10 +126,9 @@ calcTemp = function() {
 	return temp;
 };
 
-function Max31865(cs) {	
+function Max31865() {	
 	rpio = require('rpio');
 	rpio.spiBegin();
-	rpio.spiChipSelect(cs);
 	rpio.spiSetClockDivider(128);  /* Set SPI speed to 1.95MHz */
 	rpio.spiSetDataMode(1);
 	
@@ -134,8 +138,8 @@ function Max31865(cs) {
 
 Max31865.prototype.calcTemp = calcTemp;
 
-Max31865.prototype.calcTempF = function() {
-	return (((calcTemp() * 9) / 5) + 32);
+Max31865.prototype.calcTempF = function(cs) {
+	return (((calcTemp(cs) * 9) / 5) + 32);
 };
 
 var MAX31865_FAULT_HIGHTHRESH = 0x80,
@@ -145,8 +149,8 @@ var MAX31865_FAULT_HIGHTHRESH = 0x80,
  MAX31865_FAULT_RTDINLOW = 0x08,
  MAX31865_FAULT_OVUV = 0x04;
 		
-Max31865.prototype.checkFault = function() {
-	var fault = _read8(CONFIG_FAULTSTAT);
+Max31865.prototype.checkFault = function(cs) {
+	var fault = _read8(cs, CONFIG_FAULTSTAT);
 	if (fault) {
     console.log("Fault 0x"); console.log(fault);
     if (fault & MAX31865_FAULT_HIGHTHRESH) {

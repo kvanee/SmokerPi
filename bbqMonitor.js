@@ -1,8 +1,7 @@
 
 var date = require('date-and-time');
 var Max31865 = require('./Max31865');
-var bbqThermometer;
-var meatThermometer;
+var thermometer;
 //https://www.npmjs.com/package/rpio
 var rpio;
 var Datastore = require('nedb'), 
@@ -10,17 +9,15 @@ db = {}
 db.sessions = new Datastore({ filename: './session.db', autoload: true});
 db.sessionLogs = new Datastore({ filename: './logs.db', autoload: true});
 
-function bbqMonitor(debug, callback) {	
+function bbqMonitor(debug, callback) {
     if(debug) {
-		bbqThermometer = {
-			calcTempF: function(){
-				return 245 + (Math.random() * 10.0);
-			}
-		};
 		this.debugMeatTemp = 70;
-		meatThermometer = {
-			calcTempF: function(){
-				return self.debugMeatTemp += (Math.random()/10);
+		thermometer = {
+			calcTempF: function(cs){
+				if(!cs)
+					return 245 + (Math.random() * 10.0);
+				else
+					return 80;//this.debugMeatTemp += Math.random();
 			}
 		};
 		rpio = {
@@ -30,15 +27,15 @@ function bbqMonitor(debug, callback) {
 	}
 	else {
 		rpio = require('rpio');
-		bbqThermometer = new Max31865(0/*SPI Device 0*/);
-		meatThermometer = new Max31865(1/*SPI Device 0*/);
+		thermometer = new Max31865();
 	}
 	this.blowerPin = 8;/*GPIO pin used to turn the blower on and off*/
 	this.targetTemp = 250;
 	this.isBlowerOn = false;
 	this.blowerState = "off"
 	this.logState = "off"
-	this.currBbqTemp = bbqThermometer.calcTempF().toFixed(1);
+	this.currBbqTemp = thermometer.calcTempF(0/*SPI Device 0*/).toFixed(1);
+	this.currMeatTemp = thermometer.calcTempF(1/*SPI Device 1*/).toFixed(1);
 	var now = new Date();
 	this.sessionName = date.format(now, 'YYYY-MM-DD') + "-Meat";
 	this.period = 10000;/*Interval to check temp and adjust blower*/
@@ -97,8 +94,8 @@ bbqMonitor.prototype.getTemperatureLog = function(sessionName, callback) {
 function monitorTemp(self, callback) {
 	var now = new Date();
 	isBlowerOn = false;
-	self.currBbqTemp = bbqThermometer.calcTempF().toFixed(1);
-	self.currMeatTemp = meatThermometer.calcTempF().toFixed(1);
+	self.currBbqTemp = thermometer.calcTempF(0/*SPI Device 0*/).toFixed(1);
+	self.currMeatTemp = thermometer.calcTempF(1/*SPI Device 1*/).toFixed(1);
 	if(((self.currBbqTemp < self.targetTemp) && self.blowerState == "auto") || self.blowerState == "on") {
 		rpio.write(self.blowerPin, rpio.HIGH);
 		self.isBlowerOn = true;
