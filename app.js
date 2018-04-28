@@ -9,14 +9,15 @@ app.use(express.static('public'));
 var io = require('socket.io')(server);
 var port = 3080;
 var bbqMonitor = require('./bbqMonitor');
-var monitor = new bbqMonitor(false, function(data) {
+var monitor = new bbqMonitor(true, function(data) {
 	io.emit('updateTemp', data);
 });
 
 app.get('/', function (req, res) {
 	res.render('dashboard', {
 		title: 'SmokerPi', 
-		currTemp: monitor.currTemp,
+		currBbqTemp: monitor.currBbqTemp,
+		currMeatTemp: monitor.currMeatTemp,
 		targetTemp: monitor.targetTemp,
 		isBlowerOn: monitor.isBlowerOn,
 		blowerState: monitor.blowerState,

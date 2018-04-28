@@ -9,32 +9,27 @@ html(lang="en")
 			meta(name="author",content="")
 			title= title
 			block styles
-				link(rel="stylesheet", href='/bootstrap/dist/css/bootstrap.min.css')
+				link(rel="stylesheet", href='/bootstrap/dist/css/bootstrap.css')
 				link(rel="stylesheet", href='/css/main.css')
 			block headscripts
 				script(src='/jquery/dist/jquery.min.js')
 				script(src='/bootstrap/dist/js/bootstrap.min.js')
-					
-	body(class='body')
+
+	body
 		block body
-			div(class="container")
-				div(class="row")
-					h1 Welcome to SmokerPi
-				br
-				div(class="row")
-					div(class='input-group text-center')
-						span(class='input-group-addon') Name
-						input#sessionName(value=sessionName, class="form-control text-center", aria-describedby="btnGroupAddon")
-				br
-				div(class="row")
-					div(class='input-group text-center')
-						span(class='input-group-addon') Temp
-						input#targetTemp(value=targetTemp, class="form-control text-center", aria-describedby="btnGroupAddon")
-				br
-				div(class='row')
-					div(class='col justify-content-center')
-						h2#currTemp= currTemp + "°F"
-				div(class='row inline-headers')
+			div(class='body')
+				nav
+					ul
+						li
+							a(class="navbar-link", data-toggle="modal" data-target="#newSessionModal") New Session
+						li
+							a(class="navbar-link", data-toggle="modal" data-target="#settingsModal") Settings
+				div(class="container")
+					div(class='row')
+						div(class='col justify-content-center')
+							h2#currBbqTemp= "Smoker: " + currBbqTemp + "°F"
+							h2#currMeatTemp= "Meat:" + currMeatTemp + "°F"
+					br
 					div(class='btn-group' data-toggle="buttons")
 						label(class="btn btn-lg btn-warning disabled" style="pointer-events:none") Blower
 						label(class="btn btn-lg btn-warning")
@@ -46,8 +41,8 @@ html(lang="en")
 						label(class="btn btn-lg btn-warning")
 							input#BlowerOn(value="on", type='radio', name="setBlowerState", checked=(blowerState=="on"))
 							| On
-				br
-				div(class='row inline-headers')
+					br
+					br
 					div(class='btn-group' data-toggle="buttons")
 						label(class="btn btn-lg btn-warning disabled" style="pointer-events:none") Logger
 						label(class="btn btn-lg btn-warning")
@@ -56,10 +51,41 @@ html(lang="en")
 						label(class="btn btn-lg btn-warning")
 							input#BlowerOn(value="on", type='radio', name="setLogState", checked=(logState=="on"))
 							| On
-				br
-				canvas#myChart(width=400, height=400)
+					br
+					br
+					canvas#myChart(width=400, height=400)
+		div(class="modal fade", id="newSessionModal", tabindex="-1", role="dialog" labelledby="newSessionModalLabel" aria-hidden="true")
+			div(class="modal-dialog modal-dialog-centered", role="document")
+				div(class="modal-content")
+					div(class="modal-header")
+						button(type="button" class="close" data-dismiss="modal" aria-label="Close")
+							span(aria-hidden="true") &times;
+						h4(class="modal-title", id="newSessionModalLabel") New Session
+					div(class="modal-body")
+						div(class="row")
+						div(class='input-group text-center')
+							span(class='input-group-addon') Name
+							input#sessionName(value=sessionName, class="form-control text-center", aria-describedby="btnGroupAddon")
+					div(class="modal-footer")
+						button(type="button", class="btn btn-default", data-dismiss="modal") Close
+						
+		div(class="modal fade", id="settingsModal", tabindex="-1", role="dialog" labelledby="settingsModalLabel" aria-hidden="true")
+			div(class="modal-dialog modal-dialog-centered", role="document")
+				div(class="modal-content")
+					div(class="modal-header")
+						button(type="button" class="close" data-dismiss="modal" aria-label="Close")
+							span(aria-hidden="true") &times;
+						h4(class="modal-title", id="settingsModalLabel") Settings
+					div(class="modal-body")
+						div(class='input-group text-center')
+							span(class='input-group-addon') Target Temp
+							input#targetTemp(value=targetTemp, class="form-control text-center", aria-describedby="btnGroupAddon")
+					div(class="modal-footer")
+						button(type="button", class="btn btn-default", data-dismiss="modal") Close
+	
 	block scripts
 		script(src="/socket.io/socket.io.js")
+		script(src='/js/bootstrap3-typeahead.min.js')
 		script(src='/chart.js/dist/Chart.min.js')
 		script(src="/js/dashboard.js")
 	

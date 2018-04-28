@@ -1,7 +1,8 @@
 
 var date = require('date-and-time');
 var Max31865 = require('./Max31865');
-var thermometer;
+var bbqThermometer;
+var meatThermometer;
 //https://www.npmjs.com/package/rpio
 var rpio;
 var Datastore = require('nedb'), 
@@ -11,9 +12,15 @@ db.sessionLogs = new Datastore({ filename: './logs.db', autoload: true});
 
 function bbqMonitor(debug, callback) {	
     if(debug) {
-		thermometer = {
+		bbqThermometer = {
 			calcTempF: function(){
 				return 245 + (Math.random() * 10.0);
+			}
+		};
+		this.debugMeatTemp = 70;
+		meatThermometer = {
+			calcTempF: function(){
+				return self.debugMeatTemp += (Math.random()/10);
 			}
 		};
 		rpio = {
@@ -23,14 +30,15 @@ function bbqMonitor(debug, callback) {
 	}
 	else {
 		rpio = require('rpio');
-		thermometer = new Max31865(0/*SPI Device 0*/);
+		bbqThermometer = new Max31865(0/*SPI Device 0*/);
+		meatThermometer = new Max31865(1/*SPI Device 0*/);
 	}
 	this.blowerPin = 8;/*GPIO pin used to turn the blower on and off*/
 	this.targetTemp = 250;
 	this.isBlowerOn = false;
 	this.blowerState = "off"
 	this.logState = "off"
-	this.currTemp = thermometer.calcTempF().toFixed(1);
+	this.currBbqTemp = bbqThermometer.calcTempF().toFixed(1);
 	var now = new Date();
 	this.sessionName = date.format(now, 'YYYY-MM-DD') + "-Meat";
 	this.period = 10000;/*Interval to check temp and adjust blower*/
@@ -43,7 +51,7 @@ function bbqMonitor(debug, callback) {
 
 bbqMonitor.prototype.setBlowerState = function(self, blowerState) {
 	self.blowerState = blowerState;
-	if(((self.currTemp < self.targetTemp) && self.blowerState == "auto") || self.blowerState == "on") {
+	if(((self.currBbqTemp < self.targetTemp) && self.blowerState == "auto") || self.blowerState == "on") {
 		rpio.write(this.blowerPin, rpio.HIGH);
 		this.isBlowerOn = true;
 	}
@@ -67,7 +75,8 @@ bbqMonitor.prototype.setTargetTemp = function(self, targetTemp) {
 }
 
 bbqMonitor.prototype.getPastSessions = function(callback) {
-    var now = new Date();
+	//TODO: neDB does not support Distinct, so must save sessionNames separately. 
+	var now = new Date();
 	db.sessions.find({})
 		.sort({startDate: 1}) 
 		.limit(10)
@@ -88,8 +97,9 @@ bbqMonitor.prototype.getTemperatureLog = function(sessionName, callback) {
 function monitorTemp(self, callback) {
 	var now = new Date();
 	isBlowerOn = false;
-	self.currTemp = thermometer.calcTempF().toFixed(1);
-	if(((self.currTemp < self.targetTemp) && self.blowerState == "auto") || self.blowerState == "on") {
+	self.currBbqTemp = bbqThermometer.calcTempF().toFixed(1);
+	self.currMeatTemp = meatThermometer.calcTempF().toFixed(1);
+	if(((self.currBbqTemp < self.targetTemp) && self.blowerState == "auto") || self.blowerState == "on") {
 		rpio.write(self.blowerPin, rpio.HIGH);
 		self.isBlowerOn = true;
 	}
@@ -101,7 +111,8 @@ function monitorTemp(self, callback) {
 		sessionName: self.sessionName,
 		date: date.format(now, 'YYYY/MM/DD'),
 		time: date.format(now, 'HH:mm:ss'),
-		currTemp: self.currTemp,
+		currBbqTemp: self.currBbqTemp,
+		currMeatTemp: self.currMeatTemp,
 		targetTemp: self.targetTemp,
 		isBlowerOn: self.isBlowerOn
 	};
