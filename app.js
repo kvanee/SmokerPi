@@ -9,7 +9,7 @@ app.use(express.static('public'));
 var io = require('socket.io')(server);
 var port = 3080;
 var bbqMonitor = require('./bbqMonitor');
-var monitor = new bbqMonitor(true, function(data) {
+var monitor = new bbqMonitor(false, function(data) {
 	io.emit('updateTemp', data);
 });
 

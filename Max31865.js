@@ -8,7 +8,7 @@
 *  CS - this is the Chip Select pin, drop it low to start an SPI transaction. Its an input to the chip
 */
 var math = require('math');
-var debug = false;
+var debug = true;
 var refResistor = 430,
 		RTDnominal = 100,
 		CONFIG_REG = 0x00,
@@ -22,11 +22,11 @@ var refResistor = 430,
 		RTD_A = 3.9083e-3,
 		RTD_B = -5.775e-7;
 		
-function _oneShot() {
+function _oneShot(cs) {
 	//1Shot
-	var config = _read8(CONFIG_REG);
+	var config = _read8(cs, CONFIG_REG);
 	config |= CONFIG_1SHOT;
-	_write(CONFIG_REG, config);
+	_write(cs, CONFIG_REG, config);
 	rpio.msleep(65)
 }
 
@@ -76,16 +76,17 @@ function _read16(cs, address) {
 	return (msb <<8 ) + lsb; //combine msb and lsb
 }
 
-function clearFault() {
-var config = _read8(CONFIG_REG);
+function clearFault(cs) {
+var config = _read8(cs, CONFIG_REG);
   config |= CONFIG_FAULTSTAT;
-  _write(CONFIG_REG, config);
+  _write(cs, CONFIG_REG, config);
 }
 
 calcTemp = function(cs) {	
 	_enableBias(cs, true);
-	_oneShot();
-	
+	_oneShot(cs);
+	if(debug)
+		console.log("cs: " + cs);
 	var rtd = _read16(cs, RTDMSB_REG);
 	rtd >>=1; //remove fault bit
 	if(debug)
@@ -132,8 +133,10 @@ function Max31865() {
 	rpio.spiSetClockDivider(128);  /* Set SPI speed to 1.95MHz */
 	rpio.spiSetDataMode(1);
 	
-	_write(CONFIG_REG, CONFIG_3WIRE);
-	clearFault();
+	_write(0, CONFIG_REG, CONFIG_3WIRE);
+	clearFault(0);
+	_write(1, CONFIG_REG, CONFIG_3WIRE);
+	clearFault(1);
 }
 
 Max31865.prototype.calcTemp = calcTemp;
