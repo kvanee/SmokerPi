@@ -8,9 +8,12 @@ html(lang="en")
 			meta(name="description",content="")
 			meta(name="author",content="")
 			title= title
+			script(src="https://www.gstatic.com/firebasejs/4.13.0/firebase-app.js")
+			script(src="https://www.gstatic.com/firebasejs/4.13.0/firebase-messaging.js")
 			block styles
 				link(rel="stylesheet", href='/bootstrap/dist/css/bootstrap.css')
 				link(rel="stylesheet", href='/css/main.css')
+				link(rel="manifest", href='/manifest.json')
 			block headscripts
 				script(src='/jquery/dist/jquery.min.js')
 				script(src='/bootstrap/dist/js/bootstrap.min.js')
@@ -80,12 +83,25 @@ html(lang="en")
 						div(class='input-group text-center')
 							span(class='input-group-addon') Target Temp
 							input#targetTemp(value=targetTemp, class="form-control text-center", aria-describedby="btnGroupAddon")
+						br
+						div(class='input-group text-center')
+							span(class='input-group-addon') Alert high
+							input#alertHigh(value=alertHigh, class="form-control text-center", aria-describedby="btnGroupAddon")
+						br
+						div(class='input-group text-center')
+							span(class='input-group-addon') Alert Low
+							input#alertLow(value=alertLow, class="form-control text-center", aria-describedby="btnGroupAddon")
+						br
+						div(class='input-group text-center')
+							span(class='input-group-addon') Alert Meat
+							input#alertMeat(value=alertMeat, class="form-control text-center", aria-describedby="btnGroupAddon")
 					div(class="modal-footer")
 						button(type="button", class="btn btn-default", data-dismiss="modal") Close
 	
 	block scripts
 		script(src="/socket.io/socket.io.js")
-		script(src='/js/bootstrap3-typeahead.min.js')
+		//script(src='/js/bootstrap3-typeahead.min.js')
 		script(src='/chart.js/dist/Chart.min.js')
 		script(src="/js/dashboard.js")
+		script(src="/js/fcmNotifications.js")
 	

@@ -3,9 +3,9 @@ $( document ).ready(function() {
 
 	$('input[name=setBlowerState]:checked').parent().addClass('active');
 	$('input[name=setLogState]:checked').parent().addClass('active');
-	$.get("loadPastSessions", function(data){
-		$("#sessionName").typeahead(data);
-	  },'json');
+	//$.get("loadPastSessions", function(data){
+	//	$("#sessionName").typeahead(data);
+	//  },'json');
 	
 	var ctx = document.getElementById('myChart').getContext('2d');
 	var myChart = new Chart(ctx, {
@@ -17,6 +17,7 @@ $( document ).ready(function() {
 				data:[],
 				fill: false,
 				pointBackgroundColor: "#FF9600",
+				backgroundColor: "#FF9600",
 				borderColor: "#FF9600"
 			},{
 				label: "Smoker Temperature",
@@ -106,5 +107,24 @@ $( document ).ready(function() {
 		$('input[type=radio][name=setLogState][value="'+data+'"]').prop("checked", true);
 		$('input[name=setLogState]').parent().removeClass('active');
 		$('input[name=setLogState]:checked').parent().addClass('active');
+	});
+	
+	$('#alertHigh').change(function(){
+		socket.emit('setAlertHigh', this.value);
+	});
+	socket.on('setAlertHigh', function(data){
+		$('#alertHigh').val(data);
+	});
+	$('#alertLow').change(function(){
+		socket.emit('setAlertLow', this.value);
+	});
+	socket.on('setAlertLow', function(data){
+		$('#alertLow').val(data);
+	});
+	$('#alertMeat').change(function(){
+		socket.emit('setAlertMeat', this.value);
+	});
+	socket.on('setAlertMeat', function(data){
+		$('#alertMeat').val(data);
 	});
 });

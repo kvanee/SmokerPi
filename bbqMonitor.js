@@ -28,9 +28,14 @@ function bbqMonitor(debug, callback) {
 	else {
 		rpio = require('rpio');
 		thermometer = new Max31865();
+		thermometer.init3Wire(0/*SPI Device 0*/);
+		thermometer.init3Wire(1/*SPI Device 1*/);
 	}
 	this.blowerPin = 8;/*GPIO pin used to turn the blower on and off*/
 	this.targetTemp = 250;
+	this.alertHigh = 275;
+	this.alertLow = 225;
+	this.alertMeat = 195;
 	this.isBlowerOn = false;
 	this.blowerState = "off"
 	this.logState = "off"
@@ -67,8 +72,20 @@ bbqMonitor.prototype.setSessionName = function(self, sessionName) {
 	self.sessionName = sessionName;
 }
 
-bbqMonitor.prototype.setTargetTemp = function(self, targetTemp) {
-	self.targetTemp = targetTemp;
+bbqMonitor.prototype.setTargetTemp = function(self, value) {
+	self.targetTemp = value;
+}
+
+bbqMonitor.prototype.setAlertHigh = function(self, value) {
+	self.alertHigh = value;
+}
+
+bbqMonitor.prototype.setAlertLow = function(self, value) {
+	self.alertLow = value;
+}
+
+bbqMonitor.prototype.setAlertMeat = function(self, value) {
+	self.alertMeat = value;
 }
 
 bbqMonitor.prototype.getPastSessions = function(callback) {
