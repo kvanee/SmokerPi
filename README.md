@@ -2,8 +2,8 @@
 
 A Nodejs web application intended to be run on a raspberry pi (I'm using the zero W) used to control the temperature of a BBQ smoker by toggling a blower. 
 
-![hardware_image_1](https://drive.google.com/open?id=0B45INvHgePFcdG9LWWhGTDJjczhKTUFkbEFtN1p2UVFRTUMw)
-![hardware_image_1](https://drive.google.com/open?id=0B45INvHgePFcVUloNk1wT3VkMmtuZjhoNjB2TGVra3prMVp3)
+![hardware_image_1](https://preview.ibb.co/fOBqrx/20180429_170052.jpg)
+![hardware_image_1](https://preview.ibb.co/kekfPH/20180429_170134.jpg)
 
 
 ## Getting Started
