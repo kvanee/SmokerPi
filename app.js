@@ -20,7 +20,7 @@ app.use(favicon(__dirname + '/public/images/favicon.png'));
 app.use(express.static('bower_components'));
 app.use(express.static('public'));
 var io = require('socket.io')(sslserver);
-var dateTime = require('node-datetime');
+var date = require('date-and-time');
 var fcm = require('./FCM/fcm');
 var fcmToken;//currently supports a single notification client.
 var inAlert = false;
@@ -30,17 +30,17 @@ var monitor = new bbqMonitor(false, function(data) {
 	if(data.currBbqTemp > monitor.alertHigh || data.currBbqTemp < monitor.alertLow ) {
 		if(!inAlert && fcmToken) {
 			inAlert = true;
-			var dt = dateTime.create();
-			var formatted = dt.format('H:M:S');
-			
+			var now = new Date();
 			var message = {
 				token: fcmToken,
-				notification: {
-					title: 'Temperature Alert',
-					body: formatted +'-temperature: ' + data.currBbqTemp//,
-					//icon: "https://smoker.kells.io/images/favicon.png"//"/public/images/favicon.png"
-			  }			  
-			};			
+				webpush: {
+					notification: {
+						title: 'Temperature Alert',
+						body: date.format(now, 'hh:mm A') +'-temperature: ' + data.currBbqTemp,
+						icon: "https://smoker.kells.io/images/favicon.png"//"/public/images/favicon.png"
+					}
+				}
+			};
 			fcm.sendMessage(message);
 		}
 	}
