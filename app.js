@@ -7,25 +7,34 @@ var server = require('http').createServer(app);
 //Create Secure server
 //https://medium.com/@yash.kulshrestha/using-lets-encrypt-with-express-e069c7abe625
 //https://pimylifeup.com/raspberry-pi-ssl-lets-encrypt/
-var fs = require('fs');
-var options = {
-	key: fs.readFileSync('ssl/privkey.pem'),
-	cert: fs.readFileSync( 'ssl/fullchain.pem')
-};
-var https = require('https');
-var sslserver = https.createServer(options, app);
+try {
+	var fs = require('fs');
+	var options = {
+		key: fs.readFileSync('ssl/privkey.pem'),
+		cert: fs.readFileSync( 'ssl/fullchain.pem')
+	};
+	var https = require('https');
+	var sslserver = https.createServer(options, app);
+} catch(err) {
+	console.log("Warning, failed to create SSL server: " + err);
+}
 var favicon = require('serve-favicon');
 app.set('view engine', 'pug')
 app.use(favicon(__dirname + '/public/images/favicon.png'));
 app.use(express.static('bower_components'));
 app.use(express.static('public'));
-var io = require('socket.io')(sslserver);
+var io;
+if(sslserver)
+	io = require('socket.io')(sslserver);
+else
+	io = require('socket.io')(server);
 var date = require('date-and-time');
 var fcm = require('./FCM/fcm');
 var fcmToken;//currently supports a single notification client.
 var inAlert = false;
 var bbqMonitor = require('./bbqMonitor');
-var monitor = new bbqMonitor(false, function(data) {
+var auth = "";
+var monitor = new bbqMonitor(true, function(data) {
 	io.emit('updateTemp', data);
 	if(data.currBbqTemp > monitor.alertHigh || data.currBbqTemp < monitor.alertLow ) {
 		if(!inAlert && fcmToken) {
@@ -52,9 +61,11 @@ var monitor = new bbqMonitor(false, function(data) {
 app.use(function(req, res, next) {
     if (req.secure) {
         next();
-    } else {
+    } else if(sslserver) {
         res.redirect('https://' + req.headers.host + req.url);
-    }
+	}
+	else
+		next();
 });
 
 app.get('/', function (req, res) {
@@ -86,33 +97,41 @@ app.get('/loadChartData/:sessionName', function(req, res) {
 });
 
 io.on('connection', function(socket){
-	socket.on('setBlowerState', function(blowerState){
-		monitor.setBlowerState(monitor, blowerState);
-		socket.broadcast.emit('setBlowerState', blowerState);
+	socket.on('setBlowerState', function(data){
+		if(data.password.toLowerCase() === auth) {
+			monitor.setBlowerState(monitor, data.blowerState);
+			socket.broadcast.emit('setBlowerState', data.blowerState);
+		}
 	});
-	socket.on('setLogState', function(logState){
-		monitor.setLogState(monitor, logState);
-		socket.broadcast.emit('setLogState', logState);
+	socket.on('setLogState', function(data){
+		if(data.password.toLowerCase() === auth) {
+			monitor.setLogState(monitor, data.logState);
+			socket.broadcast.emit('setLogState', data.logState);
+		}
 	});
-	socket.on('setSessionName', function(SessionName){
-		monitor.setSessionName(monitor, SessionName);
-		socket.broadcast.emit('setSessionName', SessionName);
+	socket.on('saveSessionName', function(data){
+		if(data.password.toLowerCase() === auth) {
+			monitor.setSessionName(monitor, data.sessionName);
+			socket.broadcast.emit('setSessionName', data.sessionName);
+			socket.emit('setSessionName', data.sessionName);
+		}
 	});
-	socket.on('setTargetTemp', function(targetTemp){
-		monitor.setTargetTemp(monitor, targetTemp);
-		socket.broadcast.emit('setTargetTemp', targetTemp);
+	socket.on('saveSettings', function(data){
+		if(data.password.toLowerCase() === auth) {
+			monitor.setTargetTemp(monitor, data.targetTemp);
+			monitor.setAlertHigh(monitor, data.alertHigh);
+			monitor.setAlertLow(monitor, data.alertLow);
+			monitor.setAlertMeat(monitor, data.alertMeat);
+			socket.broadcast.emit('updateSettings', data);
+		}
 	});
-	socket.on('setAlertHigh', function(value){
-		monitor.setAlertHigh(monitor, value);
-		socket.broadcast.emit('setAlertHigh', value);
-	});
-	socket.on('setAlertLow', function(value){
-		monitor.setAlertLow(monitor, value);
-		socket.broadcast.emit('setAlertLow', value);
-	});
-	socket.on('setAlertMeat', function(value){
-		monitor.setAlertMeat(monitor, value);
-		socket.broadcast.emit('setAlertMeat', value);
+	socket.on('getSettings', function(){
+		socket.emit('updateSettings', {
+			targetTemp: monitor.targetTemp,
+			alertHigh: monitor.alertHigh,
+			alertLow: monitor.alertLow,
+			alertMeat: monitor.alertMeat
+		});
 	});
 	socket.on('setFcmToken', function(token){
 		console.log('token set');
@@ -126,9 +145,10 @@ server.listen(port, function(){
 	console.log('listening on port ' + port);
 });
 var sslport = 3443;
-sslserver.listen(sslport, function(){
-	console.log('listening on port (ssl) ' + sslport);
-});
+if (sslserver)
+	sslserver.listen(sslport, function(){
+		console.log('listening on port (ssl) ' + sslport);
+	});
 
 
 

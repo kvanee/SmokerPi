@@ -57,28 +57,32 @@ html(lang="en")
 					br
 					br
 					canvas#myChart(width=400, height=400)
-		div(class="modal fade", id="newSessionModal", tabindex="-1", role="dialog" labelledby="newSessionModalLabel" aria-hidden="true")
+		div#newSessionModal(class="modal fade", tabindex="-1", role="dialog" labelledby="newSessionModalLabel" aria-hidden="true")
 			div(class="modal-dialog modal-dialog-centered", role="document")
 				div(class="modal-content")
 					div(class="modal-header")
 						button(type="button" class="close" data-dismiss="modal" aria-label="Close")
 							span(aria-hidden="true") &times;
-						h4(class="modal-title", id="newSessionModalLabel") New Session
+						h4#newSessionModalLabel(class="modal-title") New Session
 					div(class="modal-body")
 						div(class="row")
 						div(class='input-group text-center')
 							span(class='input-group-addon') Name
 							input#sessionName(value=sessionName, class="form-control text-center", aria-describedby="btnGroupAddon")
+						br
+						div(class='input-group text-center')
+							span(class='input-group-addon') Password
+							input#password(class="form-control text-center", aria-describedby="btnGroupAddon")
 					div(class="modal-footer")
 						button(type="button", class="btn btn-default", data-dismiss="modal") Close
-						
-		div(class="modal fade", id="settingsModal", tabindex="-1", role="dialog" labelledby="settingsModalLabel" aria-hidden="true")
+						button#saveNewSession(type="submit", class="btn btn-primary", data-dismiss="modal") Save changes
+		div#settingsModal(class="modal fade", tabindex="-1", role="dialog" labelledby="settingsModalLabel" aria-hidden="true")
 			div(class="modal-dialog modal-dialog-centered", role="document")
 				div(class="modal-content")
 					div(class="modal-header")
 						button(type="button" class="close" data-dismiss="modal" aria-label="Close")
 							span(aria-hidden="true") &times;
-						h4(class="modal-title", id="settingsModalLabel") Settings
+						h4#settingsModalLabel(class="modal-title") Settings
 					div(class="modal-body")
 						div(class='input-group text-center')
 							span(class='input-group-addon') Target Temp
@@ -95,8 +99,13 @@ html(lang="en")
 						div(class='input-group text-center')
 							span(class='input-group-addon') Alert Meat
 							input#alertMeat(value=alertMeat, class="form-control text-center", aria-describedby="btnGroupAddon")
+						br
+						div(class='input-group text-center')
+							span(class='input-group-addon') Password
+							input#sessionPassword(class="form-control text-center", aria-describedby="btnGroupAddon")
 					div(class="modal-footer")
-						button(type="button", class="btn btn-default", data-dismiss="modal") Close
+						button#cancelSettings(type="button", class="btn btn-default", data-dismiss="modal") Close
+						button#saveSettings(type="button", class="btn btn-primary", data-dismiss="modal") Save changes
 	
 	block scripts
 		script(src="/socket.io/socket.io.js")
