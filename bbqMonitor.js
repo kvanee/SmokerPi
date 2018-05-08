@@ -33,9 +33,9 @@ function bbqMonitor(debug, callback) {
 	}
 	this.blowerPin = 8;/*GPIO pin used to turn the blower on and off*/
 	this.targetTemp = 250;
-	this.alertHigh = 275;
-	this.alertLow = 225;
-	this.alertMeat = 195;
+	this.alertHigh = 255;
+	this.alertLow = 245;
+	this.alertMeat = 201;
 	this.isBlowerOn = false;
 	this.blowerState = "off"
 	this.logState = "off"

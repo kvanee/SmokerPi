@@ -29,28 +29,30 @@ if(sslserver)
 else
 	io = require('socket.io')(server);
 var date = require('date-and-time');
-var fcm = require('./FCM/fcm');
-var fcmToken;//currently supports a single notification client.
+var fcmLib = require('./FCM/fcm');
+var fcm = new fcmLib("https://smoker.kells.io/images/favicon.png");
 var inAlert = false;
 var bbqMonitor = require('./bbqMonitor');
-var auth = "";
-var monitor = new bbqMonitor(true, function(data) {
+var auth = fs.readFileSync('password.txt', 'utf8');
+console.log(auth);
+var monitor = new bbqMonitor(false, function(data) {
 	io.emit('updateTemp', data);
-	if(data.currBbqTemp > monitor.alertHigh || data.currBbqTemp < monitor.alertLow ) {
-		if(!inAlert && fcmToken) {
+	if (data.currMeatTemp >= monitor.alertMeat) {
+		if(!inAlert) {
 			inAlert = true;
-			var now = new Date();
-			var message = {
-				token: fcmToken,
-				webpush: {
-					notification: {
-						title: 'Temperature Alert',
-						body: date.format(now, 'hh:mm A') +'-temperature: ' + data.currBbqTemp,
-						icon: "https://smoker.kells.io/images/favicon.png"//"/public/images/favicon.png"
-					}
-				}
-			};
-			fcm.sendMessage(message);
+			fcm.sendMessage(
+				'Cooking Done!!!', 
+				'Meat Temperature: ' + data.currMeatTemp
+			);
+		}
+	}
+	else if(data.currBbqTemp > monitor.alertHigh || data.currBbqTemp < monitor.alertLow ) {
+		if(!inAlert) {
+			inAlert = true;
+			fcm.sendMessage(
+				'Temperature Alert', 
+				'Smoker Temperature: ' + data.currBbqTemp
+			);
 		}
 	}
 	else if(inAlert) {
@@ -134,8 +136,8 @@ io.on('connection', function(socket){
 		});
 	});
 	socket.on('setFcmToken', function(token){
-		console.log('token set');
-		fcmToken = token;
+		console.log('FCM token set: ' + token);
+		fcm.addFCMListener(token);
 	});
 });
 
