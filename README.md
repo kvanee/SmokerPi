@@ -53,4 +53,4 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 TODO:
 
 ## PCB Design
-https://easyeda.com/kelly.vanee/smokerpihatv1
+https://easyeda.com/kelly.vanee/smokerpihat
