@@ -7,7 +7,6 @@
 *  SDI - this is the Serial Data In / Master Out Slave In pin, for data sent from your processor to the MAX31865
 *  CS - this is the Chip Select pin, drop it low to start an SPI transaction. Its an input to the chip
 */
-var math = require('math');
 var debug = false;
 var refResistor = 430,
 		RTDnominal = 100,
@@ -101,7 +100,7 @@ calcTemp = function() {
 	Z4 = 2 * RTD_B;
 
 	temp = Z2 + (Z3 * Rt);
-	temp = (math.sqrt(temp) + Z1) / Z4;
+	temp = (Math.sqrt(temp) + Z1) / Z4;
 
 	if (temp >= 0) 
 		return temp;
