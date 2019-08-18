@@ -1,5 +1,17 @@
 var express = require('express');
+var expressLayouts = require('express-ejs-layouts')
+var passport = require('passport');
+var flash = require("connect-flash");
+var session = require("express-session");
+var date = require('date-and-time');
+var fcmLib = require('./FCM/fcm');
 var app = express();
+const {
+	authenticate: authenticate
+} = require('./config/authenticate')
+
+//Passport config
+require('./config/passport')(passport);
 
 //Create unsecure server
 var server = require('http').createServer(app);
@@ -11,146 +23,89 @@ try {
 	var fs = require('fs');
 	var options = {
 		key: fs.readFileSync('ssl/privkey.pem'),
-		cert: fs.readFileSync( 'ssl/fullchain.pem')
+		cert: fs.readFileSync('ssl/fullchain.pem')
 	};
 	var https = require('https');
 	var sslserver = https.createServer(options, app);
-} catch(err) {
+} catch (err) {
 	console.log("Warning, failed to create SSL server: " + err);
 }
 var favicon = require('serve-favicon');
-app.set('view engine', 'pug')
+
+//Use Pug
+app.set('view engine', 'pug');
+
+//Bodyparser
+app.use(express.urlencoded({
+	extended: false
+}))
+
+//Express Session
+var sessionMiddleware = session({
+	secret: 'deodorant',
+	resave: true,
+	saveUninitialized: true
+});
+app.use(
+	sessionMiddleware
+);
+
+// Passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
+
+//Connect flash
+app.use(flash());
+
+//globals
+app.use((req, res, next) => {
+	res.locals.success = req.flash('success');
+	res.locals.errors = req.flash('error');
+	next();
+})
+
+//Add favicon
 app.use(favicon(__dirname + '/public/images/favicon.png'));
+
+//Add static routes
 app.use(express.static('bower_components'));
 app.use(express.static('public'));
-var io;
-if(sslserver)
-	io = require('socket.io')(sslserver);
-else
-	io = require('socket.io')(server);
-var date = require('date-and-time');
-var fcmLib = require('./FCM/fcm');
-var fcm = new fcmLib("https://smoker.kells.io/images/favicon.png");
-var inAlert = false;
-var bbqMonitor = require('./bbqMonitor');
-var auth = fs.readFileSync('password.txt', 'utf8');
-console.log(auth);
-var monitor = new bbqMonitor(false, function(data) {
-	io.emit('updateTemp', data);
-	if (data.currMeatTemp >= monitor.alertMeat) {
-		if(!inAlert) {
-			inAlert = true;
-			fcm.sendMessage(
-				'Cooking Done!!!', 
-				'Meat Temperature: ' + data.currMeatTemp
-			);
-		}
-	}
-	else if(data.currBbqTemp > monitor.alertHigh || data.currBbqTemp < monitor.alertLow ) {
-		if(!inAlert) {
-			inAlert = true;
-			fcm.sendMessage(
-				'Temperature Alert', 
-				'Smoker Temperature: ' + data.currBbqTemp
-			);
-		}
-	}
-	else if(inAlert) {
-		inAlert = false;
-	}
-});
 
-app.use(function(req, res, next) {
-    if (req.secure) {
-        next();
-    } else if(sslserver) {
-        res.redirect('https://' + req.headers.host + req.url);
-	}
-	else
+//Routes
+app.use('/', require('./routes/index'));
+app.use('/users', require('./routes/users'));
+app.use('/session', authenticate, require('./routes/session'));
+
+//FCM
+var fcm = new fcmLib("https://smoker.kells.io/images/favicon.png");
+
+//Socket.IO
+require('./config/socket.io')(sslserver || server, sessionMiddleware, fcm);
+
+//Redirect to secure server
+app.use((req, res, next) => {
+	if (req.secure) {
+		next();
+	} else if (sslserver) {
+		res.redirect('https://' + req.headers.host + req.url);
+	} else
 		next();
 });
 
-app.get('/', function (req, res) {
-	res.render('dashboard', {
-		title: 'SmokerPi', 
-		currBbqTemp: monitor.currBbqTemp,
-		currMeatTemp: monitor.currMeatTemp,
-		targetTemp: monitor.targetTemp,
-		isBlowerOn: monitor.isBlowerOn,
-		blowerState: monitor.blowerState,
-		logState: monitor.logState,
-		sessionName: monitor.sessionName,
-		alertHigh: monitor.alertHigh,
-		alertLow: monitor.alertLow,
-		alertMeat: monitor.alertMeat
-	});
+//Direct home 401
+app.get('*', function (req, res) {
+	res.redirect('/');
 });
 
-app.get('/loadPastSessions', function(req, res) {
-	monitor.getPastSessions(function(data) {
-		res.json(data);
-	});
+app.get('/health-check', function (req, res) {
+	res.sendStatus(200)
 });
-
-app.get('/loadChartData/:sessionName', function(req, res) {
-	monitor.getTemperatureLog(req.params.sessionName, function (data) {
-		res.json(data);
-	});
-});
-
-io.on('connection', function(socket){
-	socket.on('setBlowerState', function(data){
-		if(data.password.toLowerCase() === auth) {
-			monitor.setBlowerState(monitor, data.blowerState);
-			socket.broadcast.emit('setBlowerState', data.blowerState);
-		}
-	});
-	socket.on('setLogState', function(data){
-		if(data.password.toLowerCase() === auth) {
-			monitor.setLogState(monitor, data.logState);
-			socket.broadcast.emit('setLogState', data.logState);
-		}
-	});
-	socket.on('saveSessionName', function(data){
-		if(data.password.toLowerCase() === auth) {
-			monitor.setSessionName(monitor, data.sessionName);
-			socket.broadcast.emit('setSessionName', data.sessionName);
-			socket.emit('setSessionName', data.sessionName);
-		}
-	});
-	socket.on('saveSettings', function(data){
-		if(data.password.toLowerCase() === auth) {
-			monitor.setTargetTemp(monitor, data.targetTemp);
-			monitor.setAlertHigh(monitor, data.alertHigh);
-			monitor.setAlertLow(monitor, data.alertLow);
-			monitor.setAlertMeat(monitor, data.alertMeat);
-			socket.broadcast.emit('updateSettings', data);
-		}
-	});
-	socket.on('getSettings', function(){
-		socket.emit('updateSettings', {
-			targetTemp: monitor.targetTemp,
-			alertHigh: monitor.alertHigh,
-			alertLow: monitor.alertLow,
-			alertMeat: monitor.alertMeat
-		});
-	});
-	socket.on('setFcmToken', function(token){
-		console.log('FCM token set: ' + token);
-		fcm.addFCMListener(token);
-	});
-});
-
-app.get('/health-check', function(req, res) { res.sendStatus(200)});
 var port = 3080;
-server.listen(port, function(){
+server.listen(port, function () {
 	console.log('listening on port ' + port);
 });
 var sslport = 3443;
 if (sslserver)
-	sslserver.listen(sslport, function(){
+	sslserver.listen(sslport, function () {
 		console.log('listening on port (ssl) ' + sslport);
 	});
-
-
-

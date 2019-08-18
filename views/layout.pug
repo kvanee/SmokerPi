@@ -1,0 +1,25 @@
+doctype html
+head
+  meta(charset='UTF-8')
+  meta(name='viewport' content='width=device-width, initial-scale=1.0')
+  meta(http-equiv='X-UA-Compatible' content='ie=edge')
+  script(src='https://www.gstatic.com/firebasejs/4.13.0/firebase-app.js')
+  script(src='https://www.gstatic.com/firebasejs/4.13.0/firebase-messaging.js')
+  //- link(rel='stylesheet' href='https://use.fontawesome.com/releases/v5.6.3/css/all.css' integrity='sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/' crossorigin='anonymous')
+  link(rel='stylesheet' href='/css/bootstrap.min.css')
+  link(rel='stylesheet' href='/css/main.css')
+  block head_scripts
+  title SmokerPi
+body
+    .container
+      include partials/messages.pug
+      block content
+
+script(src='/js/jquery.min.js')
+script(src='/js/bootstrap.min.js')
+script(src='/js/popper.min.js')
+script(src="https://kit.fontawesome.com/8c1c40442a.js")
+//- script(src='https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js' integrity='sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut' crossorigin='anonymous')
+script(src='/js/socket.io.js')
+script(src='/js/fcmNotifications.js')
+block footer_scripts

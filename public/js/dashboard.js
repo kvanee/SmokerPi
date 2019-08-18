@@ -3,9 +3,6 @@ $( document ).ready(function() {
 
 	$('input[name=setBlowerState]:checked').parent().addClass('active');
 	$('input[name=setLogState]:checked').parent().addClass('active');
-	//$.get("loadPastSessions", function(data){
-	//	$("#sessionName").typeahead(data);
-	//  },'json');
 	
 	var ctx = document.getElementById('myChart').getContext('2d');
 	var myChart = new Chart(ctx, {
@@ -21,12 +18,15 @@ $( document ).ready(function() {
 				borderColor: "#FF9600"
 			},{
 				label: "Smoker Temperature",
-				data:[]
+				data:[],
+				pointBackgroundColor: "#303030",
+				backgroundColor: "#151515CC",
+				borderColor: "#151515"
 			}]
 		},
 		options: {
 			title: {
-				display: true,
+				display: false,
 				text: $("#sessionName").val()
 			},
 			scales: {
@@ -45,14 +45,10 @@ $( document ).ready(function() {
     	}
 	});
 
-	$.getJSON("/loadPastSessions" , function(data) {
-		data.forEach((item) => {
-			//TODO: autocomplete Name.
-		});
-	});
-	
 	var loadChartData = function(){
-		$.getJSON("/loadChartData/" + $("#sessionName").val(), function(data) {
+		console.log("get Chart Data");
+		$.getJSON("/session/loadChartData/" + $("#sessionName").val(), function(data) {
+			console.log("got Chart Data");
 			myChart.data.labels.length = 0;
 			myChart.data.datasets[1].data.length = 0;
 			myChart.data.datasets[0].data.length = 0;
@@ -66,7 +62,6 @@ $( document ).ready(function() {
 	};			
 	loadChartData();
 	socket.on('updateTemp', function(data){
-		//TODO: dont add data if session is historical.
 		$("#currBbqTemp").text("Smoker: " + data.currBbqTemp + "°F");
 		$("#currMeatTemp").text("Meat: " + data.currMeatTemp + "°F");
 		if($('input[name=setLogState]:checked').val() == "on") {

@@ -5,3 +5,6 @@ bower_components/*
 node_modules/*
 .DS_Store
 *.db
+password.txt
+TODO.txt
+.vscode/settings.json
