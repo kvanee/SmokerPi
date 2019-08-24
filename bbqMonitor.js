@@ -12,6 +12,9 @@ const BBQMonitorSingleton = (function () {
 		constructor(debug) {
 			if (!debug) {
 				rpio = require('rpio');
+				rpio.init({
+					gpiomem: false
+				});
 				rpio.open(blowerPin, rpio.OUTPUT, rpio.LOW);
 				thermometer = new Max31865();
 				//initialize BBQ thermometer

@@ -1,3 +1,4 @@
+//https://github.com/bradtraversy/node_passport_login
 const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcryptjs');
 
