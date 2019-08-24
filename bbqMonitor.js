@@ -1,144 +1,126 @@
-var date = require('date-and-time');
-var Max31865 = require('./Max31865');
-var thermometer;
+const date = require('date-and-time');
+const Max31865 = require('./Max31865');
+const db = require("./DataStore/datastore");
 //https://www.npmjs.com/package/rpio
-var rpio;
-var db = require("./DataStore/datastore");
+let rpio;
+let thermometer;
+let debugMeatTemp = 80;
+const BBQMonitorSingleton = (function () {
+	let instance;
+	class BBQMonitor {
+		constructor(debug) {
+			if (!debug) {
+				rpio = require('rpio');
+				rpio.open(blowerPin, rpio.OUTPUT, rpio.LOW);
+				thermometer = new Max31865();
+				//initialize BBQ thermometer
+				thermometer.init3Wire(0 /*SPI Device 0*/ );
+				//initialize Meat thermometer
+				thermometer.init3Wire(1 /*SPI Device 1*/ );
+			} else
+				this.setupDebug();
 
-function bbqMonitor(debug) {
-	if (debug) {
-		this.debugMeatTemp = 70;
-		thermometer = {
-			calcTempF: function (cs) {
-				if (!cs)
-					return 245 + (Math.random() * 10.0);
-				else
-					return 80;
-			}
-		};
-		rpio = {
-			open: function (a, b, c) {},
-			write: function () {}
-		};
-	} else {
-		rpio = require('rpio');
-		thermometer = new Max31865();
-		thermometer.init3Wire(0 /*SPI Device 0*/ );
-		thermometer.init3Wire(1 /*SPI Device 1*/ );
-	}
-	this.blowerPin = 8; /*GPIO pin used to turn the blower on and off*/
-	this.targetTemp = 230;
-	this.alertHigh = 245;
-	this.alertLow = 225;
-	this.alertMeat = 195;
-	this.isBlowerOn = false;
-	this.blowerState = "off"
-	this.logState = "off"
-	this.currBbqTemp = thermometer.calcTempF(0 /*SPI Device 0*/ ).toFixed(1);
-	this.currMeatTemp = thermometer.calcTempF(1 /*SPI Device 1*/ ).toFixed(1);
-	var now = new Date();
-	this.sessionName = date.format(now, 'YYYY-MM-DD') + "-Meat";
-	this.period = 1000; /*Interval to check temp and adjust blower*/
-	this.handlers = [];
-	rpio.open(this.blowerPin, rpio.OUTPUT, rpio.LOW);
-}
-
-bbqMonitor.prototype = {
-	setBlowerState: function (blowerState) {
-		this.blowerState = blowerState;
-		if (((self.currBbqTemp < self.targetTemp) && self.blowerState == "auto") || self.blowerState == "on") {
-			rpio.write(this.blowerPin, rpio.HIGH);
-			this.isBlowerOn = true;
-		} else {
-			rpio.write(this.blowerPin, rpio.LOW);
+			const blowerPin = 8;
+			/*Interval to check temp and adjust blower*/
+			const period = 10000;
+			this.handlers = [];
+			this.sessionName = date.format(new Date(), 'YYYY-MM-DD') + "-Meat";
+			this.targetTemp = 230;
+			this.alertHigh = 245;
+			this.alertLow = 225;
+			this.alertMeat = 195;
 			this.isBlowerOn = false;
+			this.blowerState = "off";
+			this.logState = "off";
+			this.currBbqTemp = thermometer.calcTempF(0 /*SPI Device 0*/ );
+			this.currMeatTemp = thermometer.calcTempF(1 /*SPI Device 1*/ );
+			this.isSessionStarted = false;
+			let self = this;
+			setInterval(() => {
+				this.monitorTemp(self)
+			}, period);
 		}
 
-	},
+		setupDebug() {
+			thermometer = {
+				calcTempF: function (cs) {
+					if (!cs)
+						return 245 + (Math.random() * 10.0);
+					else
+						return debugMeatTemp += Math.random();
+				}
+			};
+			this.rpio = {
+				write: function () {}
+			};
+		}
 
-	setLogState: function (self, logState) {
-		this.logState = logState;
-	},
-	setSessionName: function (sessionName) {
-		this.sessionName = sessionName;
-	},
-	setTargetTemp: function (value) {
-		this.targetTemp = value;
-	},
-	setAlertHigh: function (value) {
-		this.alertHigh = value;
-	},
-	setAlertLow: function (value) {
-		this.alertLow = value;
-	},
-	setAlertMeat: function (value) {
-		this.alertMeat = value;
-	},
-	getPastSessions: function (callback) {
-		//TODO: neDB does not support Distinct, so must save sessionNames separately. 
-		var now = new Date();
-		db.sessions.find({})
-			.sort({
-				startDate: 1
-			})
-			.limit(10)
-			.exec(function (err, data) {
-				callback(data);
+		updateBlowerGPIO() {
+			if (((this.currBbqTemp < this.targetTemp) && this.blowerState == "auto") || this.blowerState == "on") {
+				this.rpio.write(this.blowerPin, this.rpio.HIGH);
+				this.isBlowerOn = true;
+			} else {
+				this.rpio.write(this.blowerPin, this.rpio.LOW);
+				this.isBlowerOn = false;
+			}
+		}
+
+		async getTemperatureLog(sessionName) {
+			return db.sessionLogs.find({
+					sessionName
+				})
+				.sort({
+					date: 1,
+					time: 1
+				});
+		}
+
+		//TODO: neDB does not support Distinct, so must save sessionNames separately.
+		async getPastSessions(callback) {
+			var now = new Date();
+			data = await db.sessions.find({})
+				.sort({
+					startDate: 1
+				})
+				.limit(10);
+			callback(data);
+		}
+
+		subscribe(fn) {
+			this.handlers.push(fn);
+		}
+
+		monitorTemp(self) {
+			self.currBbqTemp = thermometer.calcTempF(0 /*SPI Device 0*/ );
+			self.currMeatTemp = thermometer.calcTempF(1 /*SPI Device 1*/ );
+			self.updateBlowerGPIO();
+			var now = new Date();
+			var data = {
+				sessionName: self.sessionName,
+				date: date.format(now, 'YYYY/MM/DD'),
+				time: date.format(now, 'HH:mm:ss'),
+				logState: self.logState,
+				currBbqTemp: self.currBbqTemp.toFixed(1),
+				currMeatTemp: self.currMeatTemp.toFixed(1),
+				targetTemp: self.targetTemp,
+				isBlowerOn: self.isBlowerOn
+			};
+			if (self.logState == "on") {
+				db.sessionLogs.insert(data);
+			}
+			self.handlers.forEach((subscriber) => {
+				subscriber(data);
 			});
-	},
-	getTemperatureLog: function (sessionName, callback) {
-		var now = new Date();
-		db.sessionLogs.find({
-				sessionName: sessionName
-			})
-			.sort({
-				date: 1,
-				time: 1
-			})
-			.exec(function (err, data) {
-				callback(data);
-			});
-	},
-	subscribe: function (fn) {
-		this.handlers.push(fn);
-	},
-	fire: function (self, data) {
-		self.handlers.forEach((item) => {
-			item.call(self, data);
-		});
-	},
-	monitorTemp: function (self, callback) {
-		var now = new Date();
-		isBlowerOn = false;
-		self.currBbqTemp = thermometer.calcTempF(0 /*SPI Device 0*/ ).toFixed(1);
-		self.currMeatTemp = thermometer.calcTempF(1 /*SPI Device 1*/ ).toFixed(1);
-		if (((self.currBbqTemp < self.targetTemp) && self.blowerState == "auto") || self.blowerState == "on") {
-			rpio.write(self.blowerPin, rpio.HIGH);
-			self.isBlowerOn = true;
-		} else {
-			rpio.write(self.blowerPin, rpio.LOW);
-			self.isBlowerOn = false;
 		}
-		var data = {
-			sessionName: self.sessionName,
-			date: date.format(now, 'YYYY/MM/DD'),
-			time: date.format(now, 'HH:mm:ss'),
-			currBbqTemp: self.currBbqTemp,
-			currMeatTemp: self.currMeatTemp,
-			targetTemp: self.targetTemp,
-			isBlowerOn: self.isBlowerOn
-		};
-		if (self.logState == "on") {
-			db.sessionLogs.insert(data);
+	};
+	return {
+		getInstance: function () {
+			if (!instance) {
+				instance = new BBQMonitor(false)
+			}
+			return instance;
 		}
-		callback(self, data);
-	},
-}
+	}
+})();
 
-var monitor = new bbqMonitor(false);
-monitor.isSessionStarted = false;
-monitor.interval = setInterval(function () {
-	monitor.monitorTemp(monitor, monitor.fire);
-}, monitor.period);
-
-module.exports = monitor;
+module.exports = BBQMonitorSingleton.getInstance();

@@ -1,24 +1,24 @@
-$( document ).ready(function() {
+$(document).ready(function () {
 	var socket = io();
 
 	$('input[name=setBlowerState]:checked').parent().addClass('active');
 	$('input[name=setLogState]:checked').parent().addClass('active');
-	
+
 	var ctx = document.getElementById('myChart').getContext('2d');
 	var myChart = new Chart(ctx, {
 		type: 'line',
 		data: {
-        		labels: [],
+			labels: [],
 			datasets: [{
 				label: "Meat Temperature",
-				data:[],
+				data: [],
 				fill: false,
 				pointBackgroundColor: "#FF9600",
 				backgroundColor: "#FF9600",
 				borderColor: "#FF9600"
-			},{
+			}, {
 				label: "Smoker Temperature",
-				data:[],
+				data: [],
 				pointBackgroundColor: "#303030",
 				backgroundColor: "#151515CC",
 				borderColor: "#151515"
@@ -30,24 +30,24 @@ $( document ).ready(function() {
 				text: $("#sessionName").val()
 			},
 			scales: {
-					yAxes: [{
-						ticks: {
-							min: 70,
-							max: 300
-						}
-					}],
-					xAxes: [{
-						time: {
-								unit: 'second'
-						}
-					}]
+				yAxes: [{
+					ticks: {
+						min: 70,
+						max: 300
+					}
+				}],
+				xAxes: [{
+					time: {
+						unit: 'second'
+					}
+				}]
 			}
-    	}
+		}
 	});
 
-	var loadChartData = function(){
+	var loadChartData = function () {
 		console.log("get Chart Data");
-		$.getJSON("/session/loadChartData/" + $("#sessionName").val(), function(data) {
+		$.getJSON("/session/loadChartData/" + $("#sessionName").val(), function (data) {
 			console.log("got Chart Data");
 			myChart.data.labels.length = 0;
 			myChart.data.datasets[1].data.length = 0;
@@ -59,59 +59,59 @@ $( document ).ready(function() {
 			});
 			myChart.update();
 		});
-	};			
+	};
 	loadChartData();
-	socket.on('updateTemp', function(data){
+	socket.on('updateTemp', function (data) {
 		$("#currBbqTemp").text("Smoker: " + data.currBbqTemp + "°F");
 		$("#currMeatTemp").text("Meat: " + data.currMeatTemp + "°F");
-		if($('input[name=setLogState]:checked').val() == "on") {
+		if (data.logState == "on") {
 			myChart.data.labels.push(data.time);
 			myChart.data.datasets[1].data.push(data.currBbqTemp);
 			myChart.data.datasets[0].data.push(data.currMeatTemp);
 			myChart.update();
 		}
-  
-		if(data.isBlowerOn)
+
+		if (data.isBlowerOn)
 			$("#currBbqTemp").css('color', 'red');
 		else
 			$("#currBbqTemp").css('color', 'green');
-	});	
+	});
 
-	$('#saveNewSession').click(function(){
+	$('#saveNewSession').click(function () {
 		socket.emit('saveSessionName', {
 			sessionName: $('#sessionName').val(),
 			password: $('#password').val()
 		});
 	});
-	socket.on('setSessionName', function(data){
+	socket.on('setSessionName', function (data) {
 		$('#sessionName').val(data);
 		myChart.options.title.text = data;
-    	myChart.update();
+		myChart.update();
 		loadChartData();
 	});
-	$('input[type=radio][name=setBlowerState]').change(function() {
-        socket.emit('setBlowerState', {
+	$('input[type=radio][name=setBlowerState]').change(function () {
+		socket.emit('setBlowerState', {
 			password: $('#password').val(),
 			blowerState: this.value
 		});
 	});
-	socket.on('setBlowerState', function(data){
-		$('input[type=radio][name=setBlowerState][value="'+data+'"]').prop("checked", true);
+	socket.on('setBlowerState', function (data) {
+		$('input[type=radio][name=setBlowerState][value="' + data + '"]').prop("checked", true);
 		$('input[name=setBlowerState]').parent().removeClass('active');
 		$('input[name=setBlowerState]:checked').parent().addClass('active');
 	});
-	$('input[type=radio][name=setLogState]').change(function() {
-        socket.emit('setLogState', {
+	$('input[type=radio][name=setLogState]').change(function () {
+		socket.emit('setLogState', {
 			password: $('#password').val(),
 			logState: this.value
 		});
-    });
-	socket.on('setLogState', function(data){
-		$('input[type=radio][name=setLogState][value="'+data+'"]').prop("checked", true);
+	});
+	socket.on('setLogState', function (data) {
+		$('input[type=radio][name=setLogState][value="' + data + '"]').prop("checked", true);
 		$('input[name=setLogState]').parent().removeClass('active');
 		$('input[name=setLogState]:checked').parent().addClass('active');
 	});
-	$('#saveSettings').click(function(){
+	$('#saveSettings').click(function () {
 		socket.emit('saveSettings', {
 			password: $('#sessionPassword').val(),
 			targetTemp: $('#targetTemp').val(),
@@ -120,13 +120,16 @@ $( document ).ready(function() {
 			alertMeat: $('#alertMeat').val()
 		});
 	});
-	$('#cancelSettings').click(function(){
+	$('#cancelSettings').click(function () {
 		socket.emit('getSettings');
 	});
-	socket.on('updateSettings', function(data){
+	socket.on('updateSettings', function (data) {
 		$('#targetTemp').val(data.targetTemp);
 		$('#alertHigh').val(data.alertHigh);
 		$('#alertLow').val(data.alertLow);
 		$('#alertMeat').val(data.alertMeat)
+	});
+	socket.on('updateFailed', function (data) {
+		$("#updateError").html('<div class="alert alert-danger" role="alert">' + data + '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>')
 	});
 });

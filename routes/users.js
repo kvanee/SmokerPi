@@ -13,9 +13,6 @@ router.get('/login', (req, res) => res.render("login"));
 //Register
 router.get('/register', (req, res) => res.render("register"));
 
-//Register2
-router.get('/register2', (req, res) => res.render("register2"));
-
 //Logout
 router.get('/logout', (req, res) => {
     req.logout();
@@ -40,14 +37,14 @@ router.post('/login', (req, res, next) => {
         });
     else
         passport.authenticate('local', {
-            successRedirect: "/session/new",
+            successRedirect: "/session/dashboard",
             failureRedirect: "/users/login",
             failureFlash: true
         })(req, res, next);
 });
 
 //Register Handle
-router.post('/register', (req, res) => {
+router.post('/register', async (req, res) => {
     var user = {
         email,
         password,
@@ -57,35 +54,35 @@ router.post('/register', (req, res) => {
     var validationErrors = validate(user, registrationConstraints)
 
     //Check for existing user
-    db.users.findOne({
+    var user = await db.users.findOne({
         email: email
-    }, function (err, doc) {
-        if (doc !== null) {
-            validationErrors = validationErrors || {};
-            (validationErrors.email = validationErrors.email || []).push(
-                'Account already registered'
-            );
-        }
-        if (validationErrors) {
-            res.render("register", {
-                validationErrors,
-                email,
-                password,
-                confirmpassword
-            });
-        } else {
-            // Hash Password
-            bcrypt.hash(password, 10).then(function (hash) {
-                var newUser = {
-                    email,
-                    password: hash
-                }
-                db.users.insert(newUser);
-                req.flash('success', 'You are now registered! Log in to continue.')
-                res.redirect("login");
-            });
-        }
     });
+    if (user) {
+        validationErrors = validationErrors || {};
+        (validationErrors.email = validationErrors.email || []).push(
+            'Account already registered'
+        );
+    }
+    if (validationErrors) {
+        res.render("register", {
+            validationErrors,
+            email,
+            password,
+            confirmpassword
+        });
+    } else {
+        // Hash Password
+        bcrypt.hash(password, 10).then(function (hash) {
+            var newUser = {
+                email,
+                password: hash,
+                isAdmin: false
+            }
+            db.users.insert(newUser);
+            req.flash('success', 'You are now registered! Log in to continue.')
+            res.redirect("login");
+        });
+    }
 });
 
 module.exports = router;

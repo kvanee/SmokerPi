@@ -1,9 +1,9 @@
-mixin formfor(field, label, fieldValue, inputType, placeholder)
+mixin formfor(field, label, fieldValue, inputType, placeholderText)
     if(typeof validationErrors != 'undefined' && typeof validationErrors[field] != 'undefined')
         - var errors = true
     .form-group(class=errors ? 'has-danger' : '')
         label(for=field) #{label}
-        input(id=field type=inputType name=field placeholder=placeholder value=fieldValue class=errors ? 'is-invalid' : '').form-control
+        input.form-control(id=field type=inputType name=field placeholder=placeholderText value=fieldValue class=errors ? 'is-invalid' : '')
         if(errors)
             each error in validationErrors[field]
                 .invalid-feedback 
