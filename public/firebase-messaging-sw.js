@@ -2,7 +2,7 @@ importScripts("https://www.gstatic.com/firebasejs/4.13.0/firebase-app.js")
 importScripts("https://www.gstatic.com/firebasejs/4.13.0/firebase-messaging.js")
 
 // Initialize Firebase
-var config = {
+const config = {
 	apiKey: "AIzaSyCQCQy04c6BD2x89rc9ZemaPfdBq0IuXNU",
 	authDomain: "smokerpi-bcb83.firebaseapp.com",
 	databaseURL: "https://smokerpi-bcb83.firebaseio.com",
@@ -13,4 +13,3 @@ var config = {
 firebase.initializeApp(config);
 
 const messaging = firebase.messaging();
-	

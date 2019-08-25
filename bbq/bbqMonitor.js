@@ -1,6 +1,6 @@
 const date = require('date-and-time');
 const Max31865 = require('./Max31865');
-const db = require("./DataStore/datastore");
+const db = require("../DataStore/datastore");
 const blowerPin = 8;
 //https://www.npmjs.com/package/rpio
 let rpio;
@@ -45,6 +45,7 @@ const BBQMonitorSingleton = (function () {
 		}
 
 		setupDebug() {
+			console.log("running in debug mode")
 			thermometer = {
 				calcTempF: function (cs) {
 					if (!cs)
@@ -53,17 +54,17 @@ const BBQMonitorSingleton = (function () {
 						return debugMeatTemp += Math.random();
 				}
 			};
-			this.rpio = {
+			rpio = {
 				write: function () {}
 			};
 		}
 
 		updateBlowerGPIO() {
 			if (((this.currBbqTemp < this.targetTemp) && this.blowerState == "auto") || this.blowerState == "on") {
-				this.rpio.write(this.blowerPin, this.rpio.HIGH);
+				rpio.write(blowerPin, rpio.HIGH);
 				this.isBlowerOn = true;
 			} else {
-				this.rpio.write(this.blowerPin, this.rpio.LOW);
+				rpio.write(blowerPin, rpio.LOW);
 				this.isBlowerOn = false;
 			}
 		}
@@ -80,7 +81,7 @@ const BBQMonitorSingleton = (function () {
 
 		//TODO: neDB does not support Distinct, so must save sessionNames separately.
 		async getPastSessions(callback) {
-			var now = new Date();
+			let now = new Date();
 			data = await db.sessions.find({})
 				.sort({
 					startDate: 1
@@ -97,8 +98,8 @@ const BBQMonitorSingleton = (function () {
 			self.currBbqTemp = thermometer.calcTempF(0 /*SPI Device 0*/ );
 			self.currMeatTemp = thermometer.calcTempF(1 /*SPI Device 1*/ );
 			self.updateBlowerGPIO();
-			var now = new Date();
-			var data = {
+			let now = new Date();
+			let data = {
 				sessionName: self.sessionName,
 				date: date.format(now, 'YYYY/MM/DD'),
 				time: date.format(now, 'HH:mm:ss'),

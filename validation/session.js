@@ -1,4 +1,4 @@
-var constraints = {
+const constraints = {
     sessionName: {
         presence: true,
         format: {

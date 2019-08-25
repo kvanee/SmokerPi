@@ -5,7 +5,7 @@ const sessionConstraints = require('../validation/session');
 const {
     authenticateAdmin
 } = require('../config/authenticate');
-var monitor = require('../bbqMonitor');
+const monitor = require('../bbqMonitor');
 
 router.get('/new', (req, res) => {
     res.render("session/new-session", {
@@ -27,7 +27,7 @@ router.post('/new', authenticateAdmin, (req, res, next) => {
     } = req.body;
 
     //Check required fields
-    var validationErrors = validate(session, sessionConstraints)
+    let validationErrors = validate(session, sessionConstraints)
     if (validationErrors) {
         res.render("session/new-session", {
             validationErrors,

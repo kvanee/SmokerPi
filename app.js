@@ -1,11 +1,9 @@
-var express = require('express');
-var expressLayouts = require('express-ejs-layouts')
-var passport = require('passport');
-var flash = require("connect-flash");
-var session = require("express-session");
-var date = require('date-and-time');
-var fcmLib = require('./FCM/fcm');
-var app = express();
+const express = require('express');
+const passport = require('passport');
+const flash = require("connect-flash");
+const session = require("express-session");
+const fcmLib = require('./FCM/fcm');
+const app = express();
 const {
 	authenticate: authenticate
 } = require('./config/authenticate')
@@ -14,23 +12,23 @@ const {
 require('./config/passport')(passport);
 
 //Create unsecure server
-var server = require('http').createServer(app);
+const server = require('http').createServer(app);
 
 //Create Secure server
 //https://medium.com/@yash.kulshrestha/using-lets-encrypt-with-express-e069c7abe625
 //https://pimylifeup.com/raspberry-pi-ssl-lets-encrypt/
 try {
-	var fs = require('fs');
-	var options = {
+	const fs = require('fs');
+	const options = {
 		key: fs.readFileSync('ssl/privkey.pem'),
 		cert: fs.readFileSync('ssl/fullchain.pem')
 	};
-	var https = require('https');
-	var sslserver = https.createServer(options, app);
+	const https = require('https');
+	const sslserver = https.createServer(options, app);
 } catch (err) {
 	console.log("Warning, failed to create SSL server: " + err);
 }
-var favicon = require('serve-favicon');
+const favicon = require('serve-favicon');
 
 //Use Pug
 app.set('view engine', 'pug');
@@ -41,7 +39,7 @@ app.use(express.urlencoded({
 }))
 
 //Express Session
-var sessionMiddleware = session({
+const sessionMiddleware = session({
 	secret: 'deodorant',
 	resave: true,
 	saveUninitialized: true
@@ -77,7 +75,7 @@ app.use('/users', require('./routes/users'));
 app.use('/session', authenticate, require('./routes/session'));
 
 //FCM
-var fcm = new fcmLib("https://smoker.kells.io/images/favicon.png");
+const fcm = new fcmLib("https://smoker.kells.io/images/favicon.png");
 
 //Socket.IO
 require('./config/socket.io')(sslserver || server, sessionMiddleware, fcm);
@@ -100,11 +98,11 @@ app.get('*', function (req, res) {
 app.get('/health-check', function (req, res) {
 	res.sendStatus(200)
 });
-var port = 3080;
+const port = 3080;
 server.listen(port, function () {
 	console.log('listening on port ' + port);
 });
-var sslport = 3443;
+const sslport = 3443;
 if (sslserver)
 	sslserver.listen(sslport, function () {
 		console.log('listening on port (ssl) ' + sslport);

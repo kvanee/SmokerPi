@@ -1,11 +1,10 @@
 //FMC https://firebase.google.com/docs/cloud-messaging/
-var fcmAdmin = require('firebase-admin');
-var fs = require('fs');
-var icon;
+const fcmAdmin = require('firebase-admin');
+const fs = require('fs');
 
 function fcm(i) {
 	try {
-		var serviceAccount = JSON.parse(fs.readFileSync("FCM/serviceAccountKey.json"));
+		let serviceAccount = JSON.parse(fs.readFileSync("FCM/serviceAccountKey.json"));
 		fcmAdmin.initializeApp({
 			credential: fcmAdmin.credential.cert(serviceAccount),
 			databaseURL: 'https://smokerpi-bcb83.firebaseio.com'
@@ -21,10 +20,10 @@ fcm.prototype = {
 	sendMessage: function (title, body, icon) {
 		// Send a message to the device corresponding to the provided
 		// registration token.
-		var goodTokens = [];
+		let goodTokens = [];
 		this.fcmTokens.forEach(function (fcmToken) {
 			try {
-				var message = {
+				let message = {
 					token: fcmToken,
 					webpush: {
 						notification: {

@@ -1,11 +1,11 @@
 $(document).ready(function () {
-	var socket = io();
+	const socket = io();
 
 	$('input[name=setBlowerState]:checked').parent().addClass('active');
 	$('input[name=setLogState]:checked').parent().addClass('active');
 
-	var ctx = document.getElementById('myChart').getContext('2d');
-	var myChart = new Chart(ctx, {
+	let ctx = document.getElementById('myChart').getContext('2d');
+	let myChart = new Chart(ctx, {
 		type: 'line',
 		data: {
 			labels: [],
@@ -45,7 +45,7 @@ $(document).ready(function () {
 		}
 	});
 
-	var loadChartData = function () {
+	let loadChartData = function () {
 		console.log("get Chart Data");
 		$.getJSON("/session/loadChartData/" + $("#sessionName").val(), function (data) {
 			console.log("got Chart Data");

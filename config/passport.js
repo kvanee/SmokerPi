@@ -3,7 +3,7 @@ const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcryptjs');
 
 //DB
-var db = require("../DataStore/datastore");
+const db = require("../DataStore/datastore");
 
 module.exports = function (passport) {
     passport.use(

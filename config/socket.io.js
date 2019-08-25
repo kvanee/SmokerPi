@@ -1,11 +1,11 @@
-var db = require("../DataStore/datastore");
+const db = require("../DataStore/datastore");
 const validate = require("validate.js");
 const sessionConstraints = require('../validation/session');
-var monitor = require('../bbqMonitor');
-var inAlert = false;
+const monitor = require('../bbqMonitor');
+let inAlert = false;
 
 module.exports = function (server, sessionMiddleware, fcm) {
-    var io = require('socket.io')(server);
+    const io = require('socket.io')(server);
     io.use((socket, next) => {
         sessionMiddleware(socket.request, {}, next);
     });
@@ -37,7 +37,7 @@ module.exports = function (server, sessionMiddleware, fcm) {
     monitor.subscribe(handleMonitorEvent);
 
     io.on('connection', async (socket) => {
-        var user = {};
+        let user = {};
         try {
             if (socket.request.session.passport) {
                 id = socket.request.session.passport.user;
@@ -65,7 +65,7 @@ module.exports = function (server, sessionMiddleware, fcm) {
             const sessionNameConstraints = {
                 sessionName
             } = sessionConstraints;
-            var validationErrors = validate(session, sessionNameConstraints)
+            let validationErrors = validate(session, sessionNameConstraints)
             if (user.isAdmin && !validationErrors) {
                 monitor.sessionName = data.sessionName;
                 socket.broadcast.emit('setSessionName', data.sessionName);
@@ -77,7 +77,7 @@ module.exports = function (server, sessionMiddleware, fcm) {
                 sessionName,
                 ...partialSessionConstraints
             } = sessionConstraints;
-            var validationErrors = validate(data, partialSessionConstraints, {
+            let validationErrors = validate(data, partialSessionConstraints, {
                 format: "flat"
             })
             if (!user.isAdmin) {

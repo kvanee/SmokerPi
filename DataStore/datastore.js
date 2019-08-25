@@ -1,5 +1,5 @@
 //DB
-var Datastore = require('nedb-promises');
+const Datastore = require('nedb-promises');
 const db = {
     users: new Datastore({
         filename: './users.db',
