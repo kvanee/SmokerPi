@@ -1,7 +1,7 @@
 const db = require("../DataStore/datastore");
 const validate = require("validate.js");
 const sessionConstraints = require('../validation/session');
-const monitor = require('../bbqMonitor');
+const monitor = require('../bbq/bbqMonitor');
 let inAlert = false;
 
 module.exports = function (server, sessionMiddleware, fcm) {

@@ -1,6 +1,6 @@
 mixin formfor(field, label, fieldValue, inputType, placeholderText)
     if(typeof validationErrors != 'undefined' && typeof validationErrors[field] != 'undefined')
-        - let errors = true
+        - var errors = true
     .form-group(class=errors ? 'has-danger' : '')
         label(for=field) #{label}
         input.form-control(id=field type=inputType name=field placeholder=placeholderText value=fieldValue class=errors ? 'is-invalid' : '')

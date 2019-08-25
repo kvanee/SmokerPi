@@ -5,7 +5,7 @@ const sessionConstraints = require('../validation/session');
 const {
     authenticateAdmin
 } = require('../config/authenticate');
-const monitor = require('../bbqMonitor');
+const monitor = require('../bbq/bbqMonitor');
 
 router.get('/new', (req, res) => {
     res.render("session/new-session", {

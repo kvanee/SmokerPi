@@ -54,10 +54,10 @@ router.post('/register', async (req, res) => {
     let validationErrors = validate(user, registrationConstraints)
 
     //Check for existing user
-    let user = await db.users.findOne({
+    let existingUser = await db.users.findOne({
         email: email
     });
-    if (user) {
+    if (existingUser) {
         validationErrors = validationErrors || {};
         (validationErrors.email = validationErrors.email || []).push(
             'Account already registered'

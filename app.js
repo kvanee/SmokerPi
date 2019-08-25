@@ -13,7 +13,7 @@ require('./config/passport')(passport);
 
 //Create unsecure server
 const server = require('http').createServer(app);
-
+let sslserver;
 //Create Secure server
 //https://medium.com/@yash.kulshrestha/using-lets-encrypt-with-express-e069c7abe625
 //https://pimylifeup.com/raspberry-pi-ssl-lets-encrypt/
@@ -24,7 +24,7 @@ try {
 		cert: fs.readFileSync('ssl/fullchain.pem')
 	};
 	const https = require('https');
-	const sslserver = https.createServer(options, app);
+	sslserver = https.createServer(options, app);
 } catch (err) {
 	console.log("Warning, failed to create SSL server: " + err);
 }
