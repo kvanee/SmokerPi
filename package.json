@@ -6,14 +6,15 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "debug": "nodemon --inspect-brk app.js",
-    "debug-wifi": "nodemon --inspect-brk ./wifi-setup/test_wifi.js"
+    "debug": "nodemon --inspect=0.0.0.0:9229 app.js",
+    "debug-wifi": "nodemon --inspect=0.0.0.0:9229 ./wifi-setup/test_wifi.js"
   },
   "author": "kvanee",
   "license": "MIT",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "chartjs": "^0.3.24",
+    "child-process": "^1.0.2",
     "child-process-promise": "^2.2.1",
     "connect-flash": "^0.1.1",
     "date-and-time": "^0.5.0",

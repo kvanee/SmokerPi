@@ -10,14 +10,14 @@ module.exports = {
         if (isAuthenticated(req.user)) {
             return next();
         }
-        req.flash('error', 'Please log in')
-        res.redirect('/users/login')
+        req.flash('error', 'Please log in');
+        res.redirect('/users/login');
     },
     authenticateAdmin: function (req, res, next) {
         if (isAuthenticated(req.user) && isAdmin(req.user)) {
             return next();
         }
-        req.flash('error', 'Only an administrator can perform that function.')
-        res.redirect(req.originalUrl)
+        req.flash('error', 'Only an administrator can perform that function.');
+        res.redirect(req.originalUrl);
     }
 }

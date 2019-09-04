@@ -8,6 +8,7 @@ const {
 	authenticate: authenticate
 } = require('./config/authenticate')
 
+
 //Passport config
 require('./config/passport')(passport);
 
@@ -66,13 +67,21 @@ app.use((req, res, next) => {
 app.use(favicon(__dirname + '/public/images/favicon.png'));
 
 //Add static routes
-app.use(express.static('bower_components'));
 app.use(express.static('public'));
+
+// Enable WiFi Setup if connection is not available
+require('./config/wifi-setup')(app, server);
 
 //Routes
 app.use('/', require('./routes/index'));
+app.use('/', require('./routes/index'));
 app.use('/users', require('./routes/users'));
 app.use('/session', authenticate, require('./routes/session'));
+
+//Direct home on 401
+app.get('*', function (req, res) {
+	res.redirect('/');
+});
 
 //FCM
 const fcm = new fcmLib("https://smoker.kells.io/images/favicon.png");
@@ -88,11 +97,6 @@ app.use((req, res, next) => {
 		res.redirect('https://' + req.headers.host + req.url);
 	} else
 		next();
-});
-
-//Direct home 401
-app.get('*', function (req, res) {
-	res.redirect('/');
 });
 
 app.get('/health-check', function (req, res) {
