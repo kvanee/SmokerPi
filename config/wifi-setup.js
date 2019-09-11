@@ -3,8 +3,8 @@ module.exports = function (app, server) {
     const io = require('socket.io')(server);
     let wifiConnected = true;
 
-    function ensureWifi() {
-        wifiConnected = wifi.isConnected();
+    async function ensureWifi() {
+        wifiConnected = await wifi.isConnected();
         if (!wifiConnected) {
             console.log('No wifi, staring AP...');
             wifi.startAP();
@@ -35,29 +35,23 @@ module.exports = function (app, server) {
                 } = req.body;
                 //direct to page to wait for wifi connection
                 res.render("connecting");
-                checkConnection = function () {
-                    wifiConnected = wifi.isConnected();
-                    if (wifiConnected) {
-                        io.emit('wifi_connected');
-                    } else {
-                        io.emit('connection_failed');
-                    }
-                }
+                //Connect after 500ms delay to allow page to render. 
                 setTimeout(() => {
                     wifi.connectNetwork(network.ssid, network.password)
                         .then(() => {
-                            setTimeout(checkConnection, 5000);
+                            wifiConnected = wifi.isConnected();
+                            if (wifiConnected) {
+                                io.emit('wifi_connected');
+                            } else {
+                                io.emit('connection_failed');
+                            }
                         })
                         .catch(() => {
                             wifi.findNetworks().then((ssids) => {
-                                res.render("wifi-setup", {
-                                    ssids,
-                                    errors: ['Unable to connect, please try again.']
-                                });
+                                io.emit('connection_failed');
                             });
                         });
                 }, 500)
-
             }
         } else {
             next();
