@@ -52,7 +52,10 @@ const BBQMonitorSingleton = (function () {
 				calcTempF: function (cs) {
 					if (!cs)
 						return 245 + (Math.random() * 10.0);
-					else
+					else if (debugMeatTemp > 205) {
+						debugMeatTemp = 60;
+						return debugMeatTemp;
+					} else
 						return debugMeatTemp += Math.random();
 				}
 			};

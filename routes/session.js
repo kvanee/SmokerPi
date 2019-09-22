@@ -38,11 +38,11 @@ router.post('/new', authenticateAdmin, (req, res, next) => {
             alertMeat: session.alertMeat
         });
     } else {
-        session.sessionName = sessionName;
-        session.targetTemp = targetTemp;
-        session.alertHigh = alertHigh;
-        session.alertLow = alertLow;
-        session.alertMeat = alertMeat;
+        monitor.sessionName = sessionName;
+        monitor.targetTemp = targetTemp;
+        monitor.alertHigh = alertHigh;
+        monitor.alertLow = alertLow;
+        monitor.alertMeat = alertMeat;
         res.redirect("/session/dashboard/" + monitor.sessionName);
     }
 });
@@ -76,7 +76,7 @@ router.get('/dashboard/:sessionName', (req, res) => {
     const sessionName = req.params.sessionName;
     if (sessionName !== monitor.sessionName)
         if (validate(sessionName, sessionConstraints))
-            monitor.setSessionName(sessionName);
+            monitor.sessionName = sessionName;
 
     res.render("session/dashboard", {
         currBbqTemp: monitor.currBbqTemp.toFixed(1),

@@ -5,6 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
+    "test": "mocha-casperjs test/google-search.js",
     "dev": "nodemon app.js",
     "debug": "nodemon --inspect=0.0.0.0:9229 app.js"
   },
@@ -36,6 +37,12 @@
     "validate.js": "^0.13.1"
   },
   "devDependencies": {
-    "nodemon": "^1.19.1"
+    "casper-chai": "^0.3.0",
+    "casperjs": "^1.1.4",
+    "chai": "^4.2.0",
+    "mocha": "^6.2.0",
+    "mocha-casperjs": "^0.6.0",
+    "nodemon": "^1.19.1",
+    "phantomjs": "^2.1.7"
   }
 }
