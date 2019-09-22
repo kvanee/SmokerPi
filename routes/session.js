@@ -38,7 +38,11 @@ router.post('/new', authenticateAdmin, (req, res, next) => {
             alertMeat: session.alertMeat
         });
     } else {
-        //monitor.start();
+        session.sessionName = sessionName;
+        session.targetTemp = targetTemp;
+        session.alertHigh = alertHigh;
+        session.alertLow = alertLow;
+        session.alertMeat = alertMeat;
         res.redirect("/session/dashboard/" + monitor.sessionName);
     }
 });

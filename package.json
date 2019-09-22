@@ -6,8 +6,7 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "debug": "nodemon --inspect=0.0.0.0:9229 app.js",
-    "debug-wifi": "nodemon --inspect=0.0.0.0:9229 ./wifi-setup/test_wifi.js"
+    "debug": "nodemon --inspect=0.0.0.0:9229 app.js"
   },
   "author": "kvanee",
   "license": "MIT",
