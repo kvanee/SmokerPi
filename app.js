@@ -103,7 +103,7 @@ app.get('/health-check', function (req, res) {
 	res.sendStatus(200)
 });
 
-const port = 80;
+const port = 3080;
 server.listen(port, function () {
 	console.log('listening on port ' + port);
 });

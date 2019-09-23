@@ -2,7 +2,7 @@ const date = require('date-and-time');
 const Max31865 = require('./Max31865');
 const db = require("../DataStore/datastore");
 const blowerPin = 8;
-const DEBUG = true;
+const DEBUG = false;
 
 //https://www.npmjs.com/package/rpio
 let rpio;
@@ -27,7 +27,7 @@ const BBQMonitorSingleton = (function () {
 				this.setupDebug();
 
 			/*Interval to check temp and adjust blower*/
-			const period = 1000;
+			const period = 5000;
 			this.handlers = [];
 			this.sessionName = date.format(new Date(), 'YYYY-MM-DD') + "-Meat";
 			this.targetTemp = 230;
