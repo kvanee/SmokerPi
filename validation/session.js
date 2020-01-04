@@ -6,6 +6,15 @@ const constraints = {
             message: "must be in the format yyyy-mm-dd-meat"
         }
     },
+    period: {
+        presence: {
+            allowEmpty: false
+        },
+        numericality: {
+            lessThan: 60,
+            greaterThanOrEqualTo: 1
+        }
+    },
     targetTemp: {
         presence: {
             allowEmpty: false
@@ -20,7 +29,7 @@ const constraints = {
             allowEmpty: false
         },
         numericality: {
-            lessThan: 400,
+            lessThan: 450,
             greaterThan: 0
         }
     },

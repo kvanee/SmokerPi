@@ -8,7 +8,8 @@ block content
           i.fas.fa-check-circle
           |   Session Complete  
         br
-        a.btn.btn-primary.btn-block.mb-2(href='/session/new') New Session
+        if(isAdmin)
+          a.btn.btn-primary.btn-block.mb-2(href='/session/new') New Session
         a.btn.btn-secondary.btn-block(href='/users/logout') Logout
     br
   .row.mt-6.mb-6
@@ -22,4 +23,4 @@ block content
 
 block footer_scripts
   script(src='/js/chart.min.js')
-  script(src='/js/dashboard.js')
+  script(src='/js/dashboardChart.js')

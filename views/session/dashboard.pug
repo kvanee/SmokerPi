@@ -36,7 +36,7 @@ block content
               | On
           br
           form(action='/session/dashboard' method='POST')
-            button.btn.btn-primary.btn-block(type='submit')
+            button#done.btn.btn-primary.btn-block(type='submit')
               | Done
   br
   .row.mt-6.mb-6
@@ -62,6 +62,7 @@ block content
           +formfor('alertHigh', 'Alert High', alertHigh)
           +formfor('alertLow', 'Alert Low', alertLow)
           +formfor('alertMeat', 'Alert Meat', alertMeat)
+          +formfor('period', 'Measurement Period (s)', period)
         div(class="modal-footer")
           button#cancelSettings(type="button", class="btn btn-default", data-dismiss="modal") Close
           button#saveSettings(type="button", class="btn btn-primary", data-dismiss="modal") Save changes
@@ -69,3 +70,4 @@ block content
 block footer_scripts
   script(src='/js/chart.min.js')
   script(src='/js/dashboard.js')
+  script(src='/js/dashboardChart.js')

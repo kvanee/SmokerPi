@@ -3,91 +3,12 @@ $(document).ready(function () {
 
 	$('input[name=setBlowerState]:checked').parent().addClass('active');
 	$('input[name=setLogState]:checked').parent().addClass('active');
+	$('#done').click(function () {
+		socket.emit('setSessionDone');
+	})
 
-	let ctx = document.getElementById('myChart').getContext('2d');
-	let myChart = new Chart(ctx, {
-		type: 'line',
-		data: {
-			labels: [],
-			datasets: [{
-				label: "Meat Temperature",
-				data: [],
-				fill: false,
-				pointBackgroundColor: "#FF9600",
-				backgroundColor: "#FF9600",
-				borderColor: "#FF9600"
-			}, {
-				label: "Smoker Temperature",
-				data: [],
-				pointBackgroundColor: "#303030",
-				backgroundColor: "#151515CC",
-				borderColor: "#151515"
-			}]
-		},
-		options: {
-			title: {
-				display: false,
-				text: $("#sessionName").val()
-			},
-			scales: {
-				yAxes: [{
-					ticks: {
-						min: 70,
-						max: 300
-					}
-				}],
-				xAxes: [{
-					time: {
-						unit: 'second'
-					}
-				}]
-			}
-		}
-	});
-
-	let loadChartData = function () {
-		console.log("get Chart Data");
-		$.getJSON("/session/loadChartData/" + $("#sessionName").val(), function (data) {
-			console.log("got Chart Data");
-			myChart.data.labels.length = 0;
-			myChart.data.datasets[1].data.length = 0;
-			myChart.data.datasets[0].data.length = 0;
-			data.forEach((item) => {
-				myChart.data.labels.push(item.time);
-				myChart.data.datasets[1].data.push(item.currBbqTemp);
-				myChart.data.datasets[0].data.push(item.currMeatTemp);
-			});
-			myChart.update();
-		});
-	};
-	loadChartData();
-	socket.on('updateTemp', function (data) {
-		$("#currBbqTemp").text("Smoker: " + data.currBbqTemp + "°F");
-		$("#currMeatTemp").text("Meat: " + data.currMeatTemp + "°F");
-		if (data.logState == "on") {
-			myChart.data.labels.push(data.time);
-			myChart.data.datasets[1].data.push(data.currBbqTemp);
-			myChart.data.datasets[0].data.push(data.currMeatTemp);
-			myChart.update();
-		}
-
-		if (data.isBlowerOn)
-			$("#currBbqTemp").css('color', 'red');
-		else
-			$("#currBbqTemp").css('color', 'green');
-	});
-
-	$('#saveNewSession').click(function () {
-		socket.emit('saveSessionName', {
-			sessionName: $('#sessionName').val(),
-			password: $('#password').val()
-		});
-	});
 	socket.on('setSessionName', function (data) {
-		$('#sessionName').val(data);
-		myChart.options.title.text = data;
-		myChart.update();
-		loadChartData();
+		window.location.replace('/session/dashboard');
 	});
 	$('input[type=radio][name=setBlowerState]').change(function () {
 		socket.emit('setBlowerState', {
@@ -113,7 +34,7 @@ $(document).ready(function () {
 	});
 	$('#saveSettings').click(function () {
 		socket.emit('saveSettings', {
-			password: $('#sessionPassword').val(),
+			period: $('#period').val(),
 			targetTemp: $('#targetTemp').val(),
 			alertHigh: $('#alertHigh').val(),
 			alertLow: $('#alertLow').val(),
@@ -124,10 +45,14 @@ $(document).ready(function () {
 		socket.emit('getSettings');
 	});
 	socket.on('updateSettings', function (data) {
+		$('#period').val(data.period);
 		$('#targetTemp').val(data.targetTemp);
 		$('#alertHigh').val(data.alertHigh);
 		$('#alertLow').val(data.alertLow);
 		$('#alertMeat').val(data.alertMeat)
+	});
+	socket.on('sessionDone', function () {
+		window.location.replace('/session/complete');
 	});
 	socket.on('updateFailed', function (data) {
 		$("#updateError").html('<div class="alert alert-danger" role="alert">' + data + '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>')

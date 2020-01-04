@@ -2,17 +2,17 @@ const date = require('date-and-time');
 const Max31865 = require('./Max31865');
 const db = require("../DataStore/datastore");
 const blowerPin = 8;
-const DEBUG = false;
 
 //https://www.npmjs.com/package/rpio
 let rpio;
 let thermometer;
 let debugMeatTemp = 70;
+let debugSuffix = '';
 const BBQMonitorSingleton = (function () {
 	let instance;
 	class BBQMonitor {
 		constructor(debug) {
-			if (!debug) {
+			try {
 				rpio = require('rpio');
 				rpio.init({
 					gpiomem: false
@@ -23,13 +23,14 @@ const BBQMonitorSingleton = (function () {
 				thermometer.init3Wire(0 /*SPI Device 0*/ );
 				//initialize Meat thermometer
 				thermometer.init3Wire(1 /*SPI Device 1*/ );
-			} else
+			} catch (err) {
 				this.setupDebug();
-
+			}
 			/*Interval to check temp and adjust blower*/
-			const period = 5000;
+			this.period = 5;
 			this.handlers = [];
-			this.sessionName = date.format(new Date(), 'YYYY-MM-DD') + "-Meat";
+			this.sessionNameSubscribers = [];
+			this.sessionName = date.format(new Date(), 'YYYY-MM-DD') + "-Meat" + debugSuffix;
 			this.targetTemp = 230;
 			this.alertHigh = 245;
 			this.alertLow = 225;
@@ -40,14 +41,31 @@ const BBQMonitorSingleton = (function () {
 			this.currBbqTemp = thermometer.calcTempF(0 /*SPI Device 0*/ );
 			this.currMeatTemp = thermometer.calcTempF(1 /*SPI Device 1*/ );
 			this.isSessionStarted = false;
+			this.isSessionComplete = false;
+			this.setupTimer(this.period);
+		}
+
+		setupTimer(period) {
+			this.period = period;
 			let self = this;
-			setInterval(() => {
+			if (this.interval) {
+				clearInterval(this.interval);
+			}
+			this.interval = setInterval(() => {
 				this.monitorTemp(self)
-			}, period);
+			}, period * 1000);
+		}
+
+		setSessionName(name) {
+			this.sessionName = name;
+			this.sessionNameSubscribers.forEach((subscriber) => {
+				subscriber(name);
+			});
 		}
 
 		setupDebug() {
 			console.log("running in debug mode")
+			debugSuffix = "-DEBUGGING"
 			thermometer = {
 				calcTempF: function (cs) {
 					if (!cs)
@@ -84,7 +102,6 @@ const BBQMonitorSingleton = (function () {
 				});
 		}
 
-		//TODO: neDB does not support Distinct, so must save sessionNames separately.
 		async getPastSessions(callback) {
 			let now = new Date();
 			data = await db.sessions.find({})
@@ -97,6 +114,10 @@ const BBQMonitorSingleton = (function () {
 
 		subscribe(fn) {
 			this.handlers.push(fn);
+		}
+
+		onSessionNameUpdate(fn) {
+			this.sessionNameSubscribers.push(fn);
 		}
 
 		monitorTemp(self) {
@@ -125,7 +146,7 @@ const BBQMonitorSingleton = (function () {
 	return {
 		getInstance: function () {
 			if (!instance) {
-				instance = new BBQMonitor(DEBUG);
+				instance = new BBQMonitor();
 			}
 			return instance;
 		}

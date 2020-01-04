@@ -10,6 +10,7 @@ const monitor = require('../bbq/bbqMonitor');
 router.get('/new', (req, res) => {
     res.render("session/new-session", {
         sessionName: monitor.sessionName,
+        period: monitor.period,
         targetTemp: monitor.targetTemp,
         alertHigh: monitor.alertHigh,
         alertLow: monitor.alertLow,
@@ -20,6 +21,7 @@ router.get('/new', (req, res) => {
 router.post('/new', authenticateAdmin, (req, res, next) => {
     const session = {
         sessionName,
+        period,
         targetTemp,
         alertHigh,
         alertLow,
@@ -32,6 +34,7 @@ router.post('/new', authenticateAdmin, (req, res, next) => {
         res.render("session/new-session", {
             validationErrors,
             sessionName: session.sessionName,
+            period: session.period,
             targetTemp: session.targetTemp,
             alertHigh: session.alertHigh,
             alertLow: session.alertLow,
@@ -39,7 +42,8 @@ router.post('/new', authenticateAdmin, (req, res, next) => {
         });
     } else {
         monitor.isSessionStarted = true;
-        monitor.sessionName = sessionName;
+        monitor.setSessionName(sessionName);
+        monitor.setupTimer(period);
         monitor.targetTemp = targetTemp;
         monitor.alertHigh = alertHigh;
         monitor.alertLow = alertLow;
@@ -49,35 +53,29 @@ router.post('/new', authenticateAdmin, (req, res, next) => {
 });
 
 router.get('/complete', (req, res, next) => {
+    monitor.blowerState = "off";
+    monitor.logState = "off";
+    monitor.isSessionComplete = true;
     res.render("session/complete", {
-        sessionName: monitor.sessionName
+        sessionName: monitor.sessionName,
+        isAdmin: req.user.isAdmin
     });
 });
 
 router.get('/dashboard', (req, res) => {
-    if (typeof req.user != 'undefined' && req.user.isAdmin && !monitor.isSessionStarted)
+    if (monitor.isSessionComplete)
+        res.redirect("/session/complete");
+    else if (typeof req.user != 'undefined' && req.user.isAdmin && !monitor.isSessionStarted)
         res.redirect("/session/new");
     else
-        res.render("session/dashboard", {
-            currBbqTemp: monitor.currBbqTemp.toFixed(1),
-            currMeatTemp: monitor.currMeatTemp.toFixed(1),
-            targetTemp: monitor.targetTemp,
-            isBlowerOn: monitor.isBlowerOn,
-            blowerState: monitor.blowerState,
-            logState: monitor.logState,
-            sessionName: monitor.sessionName,
-            alertHigh: monitor.alertHigh,
-            alertLow: monitor.alertLow,
-            alertMeat: monitor.alertMeat,
-            isAdmin: req.user.isAdmin
-        });
+        res.redirect("/session/dashboard/" + monitor.sessionName)
 });
 
 router.get('/dashboard/:sessionName', (req, res) => {
     const sessionName = req.params.sessionName;
-    if (sessionName !== monitor.sessionName)
+    if (typeof req.user != 'undefined' && req.user.isAdmin && sessionName !== monitor.sessionName)
         if (validate(sessionName, sessionConstraints))
-            monitor.sessionName = sessionName;
+            monitor.setSessionName(sessionName);
 
     res.render("session/dashboard", {
         currBbqTemp: monitor.currBbqTemp.toFixed(1),
@@ -87,9 +85,11 @@ router.get('/dashboard/:sessionName', (req, res) => {
         blowerState: monitor.blowerState,
         logState: monitor.logState,
         sessionName: monitor.sessionName,
+        period: monitor.period,
         alertHigh: monitor.alertHigh,
         alertLow: monitor.alertLow,
-        alertMeat: monitor.alertMeat
+        alertMeat: monitor.alertMeat,
+        isAdmin: req.user.isAdmin
     });
 });
 

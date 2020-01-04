@@ -34,7 +34,12 @@ module.exports = function (server, sessionMiddleware, fcm) {
             }
         }
     }
+
+    function handleSessionNameUpdateEvent(data) {
+        io.emit('setSessionName', data.sessionName);
+    }
     monitor.subscribe(handleMonitorEvent);
+    monitor.onSessionNameUpdate(handleSessionNameUpdateEvent);
 
     io.on('connection', async (socket) => {
         let user = {};
@@ -61,17 +66,6 @@ module.exports = function (server, sessionMiddleware, fcm) {
                 socket.broadcast.emit('setLogState', data.logState);
             }
         });
-        socket.on('saveSessionName', (data) => {
-            const sessionNameConstraints = {
-                sessionName
-            } = sessionConstraints;
-            let validationErrors = validate(session, sessionNameConstraints)
-            if (user.isAdmin && !validationErrors) {
-                monitor.sessionName = data.sessionName;
-                socket.broadcast.emit('setSessionName', data.sessionName);
-                socket.emit('setSessionName', data.sessionName);
-            }
-        });
         socket.on('saveSettings', (data) => {
             const {
                 sessionName,
@@ -83,6 +77,7 @@ module.exports = function (server, sessionMiddleware, fcm) {
             if (!user.isAdmin) {
                 socket.emit('updateFailed', "Only an administrator can update settings.");
                 socket.emit('updateSettings', {
+                    period: monitor.period,
                     targetTemp: monitor.targetTemp,
                     alertHigh: monitor.alertHigh,
                     alertLow: monitor.alertLow,
@@ -91,12 +86,14 @@ module.exports = function (server, sessionMiddleware, fcm) {
             } else if (validationErrors) {
                 socket.emit('updateFailed', validationErrors[0]);
                 socket.emit('updateSettings', {
+                    period: monitor.period,
                     targetTemp: monitor.targetTemp,
                     alertHigh: monitor.alertHigh,
                     alertLow: monitor.alertLow,
                     alertMeat: monitor.alertMeat
                 });
             } else {
+                monitor.setupTimer(data.period);
                 monitor.targetTemp = data.targetTemp;
                 monitor.alertHigh = data.alertHigh;
                 monitor.alertLow = data.alertLow;
@@ -107,11 +104,15 @@ module.exports = function (server, sessionMiddleware, fcm) {
         });
         socket.on('getSettings', function () {
             socket.emit('updateSettings', {
+                period: monitor.period,
                 targetTemp: monitor.targetTemp,
                 alertHigh: monitor.alertHigh,
                 alertLow: monitor.alertLow,
                 alertMeat: monitor.alertMeat
             });
+        });
+        socket.on('setSessionDone', function (token) {
+            socket.broadcast.emit('sessionDone');
         });
         socket.on('setFcmToken', function (token) {
             fcm.addFCMListener(token);
