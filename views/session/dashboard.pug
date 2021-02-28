@@ -8,10 +8,10 @@ block content
       .card.card-body.text-center
         .row.d-inline
           i.fas.fa-thermometer-half.fa-2x
-          h1#currBbqTemp.d-inline.ml-3 Smoker: 0°F
+          h1#currBbqTemp.d-inline.ml-3='Smoker: ' + currBbqTemp + '°F'
         .row.d-inline
           i.fas.fa-thermometer-half.fa-2x
-          h1#currMeatTemp.d-inline.ml-3 Meat: 0°F
+          h1#currMeatTemp.d-inline.ml-3='Meat: ' + currMeatTemp + '°F'
         br
         if(isAdmin)
           .btn-group(data-toggle='buttons')

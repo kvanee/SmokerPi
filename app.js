@@ -103,12 +103,12 @@ app.get('/health-check', function (req, res) {
 	res.sendStatus(200)
 });
 
-const port = 3080;
+const port = 80;
 server.listen(port, function () {
 	console.log('listening on port ' + port);
 });
 
-const sslport = 3443;
+const sslport = 443;
 if (sslserver)
 	sslserver.listen(sslport, function () {
 		console.log('listening on port (ssl) ' + sslport);
